@@ -4,17 +4,17 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-        <title>{% block title %} {% endblock %} - Diffusion Interface</title>
+        <title>{% block title %}Diffusion Interface{% endblock %}</title>
 
-        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
         {% block static %}
         {% endblock %}
     </head>
     <body>
-        {% block content %}
+        {% block content required %}
         {% endblock %}
         
-        <script type="text/javascript" src="{{ url_for('static', filename='main.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='js/main.js') }}"></script>
         {% block js %}
         {% endblock %}
     </body>

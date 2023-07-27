@@ -1,0 +1,111 @@
+.interface {
+    padding: 10px;
+    min-width: 600px;
+}
+
+.interface-content {
+    display: flex;
+    justify-content: space-evenly;
+}
+
+/* Medium devices (landscape tablets, 768px and up) */
+@media only screen and (min-width: 768px) {
+    .interface-content {
+        flex-direction: row;
+    }
+
+    .interface-inputs {
+        width: 600px;
+        height: inherit;
+    }
+    
+    .interface-outputs {
+        width: 600px;
+        height: 600px;
+    }
+}
+
+/* Medium devices (landscape tablets, 768px and below) */
+@media only screen and (max-width: 768px) {
+    .interface-content {
+        flex-direction: column;
+    }
+
+    .interface-outputs {
+        margin-top: 10px;
+    }
+}
+/*
+.interface-content {
+    display: flex;
+    justify-content: space-evenly;
+    flex-direction: row;
+    height: 720px;
+}
+*/
+
+.interface-outputs > .interface-body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.interface-body {
+    height: 100%;
+}
+
+.interface-body canvas {
+    display: block;
+    margin: auto;
+}
+
+#paint-canvas {
+    cursor:crosshair;
+    outline: solid 1px;
+    border-radius: 5px;
+}
+
+#controls-fieldset span {
+    margin: 10px 0;
+}
+
+.sampling-option {
+    margin: 10px 0;
+}
+
+.option-full-width {
+    display: block;
+    width: 100%;
+}
+
+.output-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.output-controls input[type="button"] {
+    width: 100px;
+    height: 50px;
+    border-radius: 30px;
+    margin: 10px;
+}
+
+#controls-fieldset input[type="button"], #controls-fieldset input[type="submit"] {
+    width: 100px;
+    height: 30px;
+    border-radius: 30px;
+    color: white;
+}
+
+#generate-btn {
+    background-color: green;
+}
+
+#reset-btn {
+    background-color: red;
+}
+
+#controls-fieldset input {
+    margin: 5px 0;
+}

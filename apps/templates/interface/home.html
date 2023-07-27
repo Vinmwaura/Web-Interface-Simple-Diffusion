@@ -1,12 +1,133 @@
 {% extends "base.html" %}
 
-{% block title %}{% endblock %}
-
 {% block static %}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/interface.css') }}">
 {% endblock %}
 
 {% block content %}
+<div class="interface">
+    <!-- Tab links -->
+    <nav class="tab">
+        <button class="tablinks" onclick="openTab(event, 'mybody')" id="defaultOpen">Body Pose</button>
+    </nav>
+
+    <!-- Tab Contents -->
+    <div id="mybody" class="tabcontent">
+        <!-- Body Poses Doodle -->
+        <div class="interface-content">
+            <div class="interface-inputs">
+                <div class="interface-body">
+                    <form action="" id="body-pose-form">
+                        <fieldset id="canvas-fieldset">
+                            <legend>Canvas</legend>
+                            <!-- Paint Canvas -->
+                            <canvas id="paint-canvas" width="512" height="512"></canvas>
+                        </fieldset>
+
+                        <fieldset id="controls-fieldset">
+                            <legend>Controls</legend>
+                            <!-- Model Input Controls-->
+                            <input id="reset-btn" type="button" value="Reset">
+                            <input id="generate-btn" type="submit" value="Generate">
+                            <div class="sampling-option">
+                                <input
+                                    id="specificseed"
+                                    type="checkbox"
+                                    name="specificseed"
+                                    value="specificseed">
+                                <label for="specificseed"> Use Specific seed</label>
+                            </div>
+                        </fieldset>
+
+                        <fieldset>
+                            <!-- Diffusion Sampling Algorithms -->
+                            <legend>Sampling Parameters</legend>
+
+                            <div class="sampling-option">
+                                <label for="seed_val" class="option-full-width">Seed:</label>
+                                <input
+                                    class="option-full-width"
+                                    id="seed_val"
+                                    type="number"
+                                    min="0"
+                                    step="1"
+                                    pattern="[0-9]{1,5}"
+                                    lang="en-150"
+                                    placeholder="Seed value e.g 69"
+                                    disabled>
+                            </div>
+
+                            <div class="sampling-option">
+                                <label for="sampling_alg" class="option-full-width">Sampling Algorithm:</label>
+                                <select name="sampling_alg" class="option-full-width" id="sampling_alg">
+                                    <option value="ddpm">DDPM</option>
+                                    <option value="ddim">DDIM</option>
+                                </select>
+                            </div>
+
+                            <div class="sampling-option">
+                                <label for="sampling_steps" class="option-full-width">Steps to skip:</label><br>
+                                <input
+                                    class="option-full-width"
+                                    id="sampling_steps"
+                                    type="range"
+                                    min="1"
+                                    max="1000"
+                                    value="10"
+                                    class="slider"
+                                    oninput="sampleStepId.value=this.value">
+                                <output id="sampleStepId">10</output>
+                            </div>
+            
+                            <div class="sampling-option">
+                                <label for="useGPU"> Use GPU (CUDA)</label>
+                                <input
+                                    id="useGPU"
+                                    type="checkbox"
+                                    name="useGPU"
+                                    value="useGPU">
+                            </div>
+
+                            <div class="sampling-option">
+                                <label for="upsample"> Upsample Image (Max Res: 256px)</label>
+                                <input
+                                    id="upsample"
+                                    type="checkbox"
+                                    name="upsample"
+                                    value="upsample">
+                            </div>
+                        </fieldset>
+                    </form>
+                </div>
+            </div>
+            <div class="interface-outputs">
+                <div class="interface-body">
+                    <img id="generated-img" src="{{ url_for('static', filename='media/placeholder/placeholder_512x512.png') }}", alt="Generated/Placeholder Image"/>
+                </div>
+                <div class="output-controls">
+                    <input id="save-btn" type="button" value="Save">
+                    <input id="clear-btn" type="button" value="Clear">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block js %}
+<script defer type="text/javascript" src="{{ url_for('static', filename='js/canvas.js') }}"></script>
+
+<script>
+    // Executes when DOM is finally loaded.
+    window.addEventListener("DOMContentLoaded", function() {
+        // Activates first tab to load it's content onto screen.
+        document.getElementById("defaultOpen").click();
+
+        // Creates paint-canvas and adds it to the screen.
+        const [canvas, context] = create_canvas("paint-canvas", 10, "black");
+    
+        // Set Clear functionality for clear button.
+        set_clear_canvas_btn("reset-btn", canvas, context);
+    });
+</script>
 {% endblock %}
