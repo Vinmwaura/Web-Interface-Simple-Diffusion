@@ -9,3 +9,5 @@ class Config:
     DOODLE_IMG_DIM = os.environ.get('DOODLE_IMG_DIM', 128)
     DOODLE_BASE_PATH = os.environ.get("DOODLE_BASE_PATH", "./models/doodle_base.json")
     DOODLE_SR_PATH = os.environ.get("DOODLE_SR_PATH", "./models/doodle_sr.json")
+    MYFACE_BASE_PATH = os.environ.get("MYFACE_BASE_PATH", "./models/myface_base.json")
+    MYFACE_SR_PATH = os.environ.get("MYFACE_SR_PATH", "./models/myface_sr.json")

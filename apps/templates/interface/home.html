@@ -6,9 +6,11 @@
 
 {% block content %}
 <div class="interface">
+
     <!-- Tab links -->
     <nav class="tab">
         <button class="tab-links" onclick="openTab(event, 'my-body')" id="default-open">Body Pose</button>
+        <button class="tab-links" onclick="openTab(event, 'my-face')">Face</button>
     </nav>
 
     <!-- Body Poses Doodle Tab -->
@@ -17,7 +19,7 @@
             <div class="interface-inputs">
                 <div class="interface-body">
                     <form action="{{ url_for('interface.generate_doodle_images') }}" method="POST" class="interface-form" id="body-pose-form">
-                        <fieldset id="canvas-fieldset">
+                        <fieldset class="canvas-fieldset">
                             <legend>Canvas</legend>
                             <!-- Paint Canvas -->
                             <canvas id="paint-canvas" width="512" height="512">
@@ -25,7 +27,7 @@
                             </canvas>
                         </fieldset>
 
-                        <fieldset id="controls-fieldset">
+                        <fieldset class="controls-fieldset">
                             <legend>Controls</legend>
                             <!-- Model Input Controls-->
                             <input id="reset-btn" type="button" value="Reset">
@@ -41,19 +43,19 @@
 
                             <div class="sampling-option">
                                 <input
-                                    id="use-specific-seed"
+                                    id="use-specific-seed-doodle"
                                     type="checkbox"
-                                    name="use-specific-seed"
-                                    value="use-specific-seed"
-                                    onclick="toggle_seed_enable();">
-                                <label for="use-specific-seed"> Use Specific seed</label>
+                                    name="use-specific-seed-doodle"
+                                    value="use-specific-seed-doodle"
+                                    onclick="toggle_seed_enable('doodle');">
+                                <label for="use-specific-seed-doodle"> Use Specific seed</label>
                             </div>
 
                             <div class="sampling-option">
-                                <label for="seed-val" class="option-full-width">Seed:</label>
+                                <label for="seed-val-doodle" class="option-full-width">Seed:</label>
                                 <input
                                     class="option-full-width"
-                                    id="seed-val"
+                                    id="seed-val-doodle"
                                     type="number"
                                     min="0"
                                     step="1"
@@ -65,60 +67,206 @@
                             </div>
 
                             <div class="sampling-option">
-                                <label for="sampling-alg" class="option-full-width">Sampling Algorithm:</label>
-                                <select name="sampling-alg" class="option-full-width" id="sampling-alg" onchange="toggle_base_skip_steps()">
-                                    <option value="ddpm">DDPM</option>
+                                <label for="sampling-alg-doodle" class="option-full-width">Sampling Algorithm:</label>
+                                <select name="sampling-alg-doodle" class="option-full-width" id="sampling-alg-doodle" onchange="toggle_base_skip_steps('doodle')">
                                     <option value="ddim">DDIM</option>
+                                    <option value="ddpm">DDPM</option>
                                 </select>
                             </div>
 
                             <div class="sampling-option">
-                                <label for="base-skip-steps" class="option-full-width">Steps to skip(Base): <output id="baseskipstepout">100</output></label>
+                                <label for="base-skip-steps-doodle" class="option-full-width">Steps to skip(Base): <output id="baseskipstepoutdoodle">100</output></label>
                                 <input
                                     class="option-full-width"
-                                    id="base-skip-steps"
+                                    id="base-skip-steps-doodle"
                                     type="range"
                                     min="1"
                                     max="1000"
                                     value="100"
                                     class="slider"
-                                    oninput="baseskipstepout.value=this.value"
-                                    disabled>
-                            </div>
-                            <div class="sampling-option">
-                                <label for="upsample"> Upsample Image (Max Res: 256px)</label>
-                                <input
-                                    id="upsample"
-                                    type="checkbox"
-                                    name="upsample"
-                                    value="upsample"
-                                    onclick="toggle_sr_skip_steps()">
+                                    oninput="baseskipstepoutdoodle.value=this.value">
                             </div>
 
                             <div class="sampling-option">
-                                <label for="sr-skip-steps" class="option-full-width">Steps to skip(Super Resolution): <output id="srskipstepout">100</output></label>
+                                <label for="upsample-doodle"> Upsample Image (Max Res: 256px)</label>
+                                <input
+                                    id="upsample-doodle"
+                                    type="checkbox"
+                                    name="upsample-doodle"
+                                    value="upsample-doodle"
+                                    onclick="toggle_sr_skip_steps('doodle')">
+                            </div>
+
+                            <div class="sampling-option">
+                                <label for="sr-skip-steps-doodle" class="option-full-width">Steps to skip(Super Resolution): <output id="srskipstepoutdoodle">100</output></label>
                                 <input
                                     class="option-full-width"
-                                    id="sr-skip-steps"
+                                    id="sr-skip-steps-doodle"
                                     type="range"
                                     min="1"
                                     max="1000"
                                     value="100"
                                     class="slider"
-                                    oninput="srskipstepout.value=this.value"
+                                    oninput="srskipstepoutdoodle.value=this.value"
                                     disabled>
                             </div>
                         </fieldset>
                     </form>
                 </div>
             </div>
+        
             <div class="interface-outputs">
                 <div class="interface-body">
-                    <img id="generated-img" src="{{ url_for('static', filename='media/placeholder/placeholder_512x512.png') }}", alt="Generated/Placeholder Image"/>
+                    <img id="generated-img-doodle" src="{{ url_for('static', filename='media/placeholder/placeholder_512x512.png') }}", alt="Generated/Placeholder Image"/>
                 </div>
                 <div class="output-controls">
-                    <input id="save-btn" type="button" value="Save" onclick="save_generated_doodle_image()">
-                    <input id="clear-btn" type="button" value="Clear" onclick="clear_generated_image()">
+                    <input id="save-btn" type="button" value="Save" onclick="save_generated_image('doodle')">
+                    <input id="clear-btn" type="button" value="Clear" onclick="clear_generated_image('doodle')">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Face Tab -->
+    <div id="my-face" class="tab-content">
+        <div class="interface-content">
+            <div class="interface-inputs">
+                <div class="interface-body">
+                    <form action="{{ url_for('interface.generate_myface_images') }}" method="POST" class="interface-form" id="face-form">
+                        <fieldset class="face-fieldset">
+                            <legend>Face Controllers</legend>
+
+                            <div class="controller-option">
+                                <input
+                                    id="left-eye-open-face"
+                                    type="checkbox"
+                                    name="left-eye-open-face"
+                                    value="left-eye-open-face">
+                                <label for="left-eye-open-face"> Left Eye Open</label>
+                            </div>
+
+                            <div class="controller-option">
+                                <input
+                                    id="right-eye-open-face"
+                                    type="checkbox"
+                                    name="right-eye-open-face"
+                                    value="right-eye-open-face">
+                                <label for="right-eye-open-face"> Right Eye Open</label>
+                            </div>
+
+                            <div class="controller-option">
+                                <input
+                                    id="mouth-open-face"
+                                    type="checkbox"
+                                    name="mouth-open-face"
+                                    value="mouth-open-face">
+                                <label for="mouth-open-face"> Mouth Open</label>
+                            </div>
+
+                            <div class="controller-option">
+                                <input
+                                    id="show-teeth-face"
+                                    type="checkbox"
+                                    name="show-teeth-face"
+                                    value="show-teeth-face">
+                                <label for="show-teeth-face"> Show Teeth</label>
+                            </div>
+                        </fieldset>
+
+                        <fieldset class="controls-fieldset">
+                            <legend>Controls</legend>
+                            <!-- Model Input Controls-->
+                            <input
+                                class="generate-btn"
+                                type="submit"
+                                value="Generate">
+                        </fieldset>
+
+                        <fieldset>
+                            <!-- Diffusion Sampling Algorithms -->
+                            <legend>Sampling Parameters</legend>
+                            
+                            <div class="sampling-option">
+                                <input
+                                    id="use-specific-seed-face"
+                                    type="checkbox"
+                                    name="use-specific-seed-face"
+                                    value="use-specific-seed-face"
+                                    onclick="toggle_seed_enable('face');">
+                                <label for="use-specific-seed-face"> Use Specific seed</label>
+                            </div>
+
+                            <div class="sampling-option">
+                                <label for="seed-val" class="option-full-width">Seed:</label>
+                                <input
+                                    class="option-full-width"
+                                    id="seed-val-face"
+                                    type="number"
+                                    min="0"
+                                    step="1"
+                                    pattern="[0-9]{1,5}"
+                                    lang="en-150"
+                                    placeholder="Seed value e.g 69"
+                                    disabled
+                                    required>
+                            </div>
+
+                            <div class="sampling-option">
+                                <label for="sampling-alg-face" class="option-full-width">Sampling Algorithm:</label>
+                                <select name="sampling-alg-face" class="option-full-width" id="sampling-alg-face" onchange="toggle_base_skip_steps('face')">
+                                    <option value="ddim">DDIM</option>
+                                    <option value="ddpm">DDPM</option>
+                                </select>
+                            </div>
+
+                            <div class="sampling-option">
+                                <label for="base-skip-steps-face" class="option-full-width">Steps to skip(Base): <output id="baseskipstepoutface">100</output></label>
+                                <input
+                                    class="option-full-width"
+                                    id="base-skip-steps-face"
+                                    type="range"
+                                    min="1"
+                                    max="1000"
+                                    value="100"
+                                    class="slider"
+                                    oninput="baseskipstepoutface.value=this.value">
+                            </div>
+
+                            <div class="sampling-option">
+                                <label for="upsample-face"> Upsample Image (Max Res: 256px)</label>
+                                <input
+                                    id="upsample-face"
+                                    type="checkbox"
+                                    name="upsample-face"
+                                    value="upsample-face"
+                                    onclick="toggle_sr_skip_steps('face')">
+                            </div>
+
+                            <div class="sampling-option">
+                                <label for="sr-skip-steps-face" class="option-full-width">Steps to skip(Super Resolution): <output id="srskipstepoutface">100</output></label>
+                                <input
+                                    class="option-full-width"
+                                    id="sr-skip-steps-face"
+                                    type="range"
+                                    min="1"
+                                    max="1000"
+                                    value="100"
+                                    class="slider"
+                                    oninput="srskipstepoutface.value=this.value"
+                                    disabled>
+                            </div>
+                        </fieldset>
+                    </form>
+                </div>
+            </div>
+
+            <div class="interface-outputs">
+                <div class="interface-body">
+                    <img id="generated-img-face" src="{{ url_for('static', filename='media/placeholder/placeholder_512x512.png') }}", alt="Generated/Placeholder Image"/>
+                </div>
+                <div class="output-controls">
+                    <input id="save-btn" type="button" value="Save" onclick="save_generated_image('face')">
+                    <input id="clear-btn" type="button" value="Clear" onclick="clear_generated_image('face')">
                 </div>
             </div>
         </div>
@@ -131,34 +279,33 @@
 
 <script>
     /* Clears generated Body Pose Images */
-    function clear_generated_image() {
-        const img_elem = document.getElementById("generated-img");
+    function clear_generated_image(tab_name) {
+        const img_elem = document.getElementById("generated-img-" + tab_name);
         const placeholder_img_url = "{{ url_for('static', filename='media/placeholder/placeholder_512x512.png') }}";
         img_elem.src = placeholder_img_url;
     }
 
-    /* Save generated Body Pose Images */
-    function save_generated_doodle_image() {
-        const placeholder_img_path = "{{ url_for('static', filename='media/placeholder/placeholder_512x512.png') }}";
-        const img_elem = document.getElementById("generated-img");
+    /* Save generated  Images */
+    function save_generated_image(tab_name) {
+        const img_elem = document.getElementById("generated-img-" + tab_name);
         var img_src = img_elem.src;
 
         var a  = document.createElement('a');
-        a.href = img_src || placeholder_img_path;
+        a.href = img_src;
         a.download = "image.png";
         a.click()
     }
 
     /* Shows generated Body Pose Image */
-    function show_generated_doodle_image(img_b64) {
+    function show_generated_image(img_b64, tab_name) {
         const b64_image = "data:image/png;base64," + img_b64;
-        const img_elem = document.getElementById("generated-img");
+        const img_elem = document.getElementById("generated-img-" + tab_name);
         img_elem.src = b64_image;
     }
 
     /* Toggle Manual seed */
-    function toggle_seed_enable() {
-        const seed_elem = document.getElementById("seed-val");
+    function toggle_seed_enable(tab_name) {
+        const seed_elem = document.getElementById("seed-val-" + tab_name);
         const is_seed_enabled = seed_elem.disabled;
         if(is_seed_enabled) {
             seed_elem.disabled = false;
@@ -169,27 +316,25 @@
     }
 
     /* Toggles skip steps option for base diffusion */
-    function toggle_base_skip_steps() {
-        const sample_alg = document.getElementById("sampling-alg");
-        const skip_step_elem = document.getElementById("base-skip-steps");
-        const is_disabled = skip_step_elem.disabled;
-        const sample_alg_val = sample_alg.value;
-
-        if (sample_alg_val==="ddim" && is_disabled) {
-            skip_step_elem.disabled = false;
-        } else if (sample_alg_val==="ddpm" && !is_disabled) {
-            skip_step_elem.disabled = true;
+    function toggle_base_skip_steps(tab_name) {
+        const sample_alg = document.getElementById("sampling-alg-" + tab_name);
+        const skip_step_elem = document.getElementById("base-skip-steps-" + tab_name);
+        if (sample_alg.value == "ddpm") {
+            skip_step_elem.setAttribute("disabled", "disabled");
+        } else if (sample_alg.value == "ddim") {
+            skip_step_elem.removeAttribute("disabled");
         }
     }
 
     /* Toggles skip steps option for SuperResolution diffusion */
-    function toggle_sr_skip_steps() {
-        const upsample_elem = document.getElementById("upsample");
-        const upsample_checked = upsample_elem.checked;
-        const skip_step_elem = document.getElementById("sr-skip-steps");
-        const is_disabled = skip_step_elem.disabled;
-
-        skip_step_elem.disabled = !is_disabled;
+    function toggle_sr_skip_steps(tab_name) {
+        const upsample_elem = document.getElementById("upsample-" + tab_name);
+        const skip_step_elem = document.getElementById("sr-skip-steps-" + tab_name);
+        if (upsample_elem.checked) {
+            skip_step_elem.removeAttribute("disabled");
+        } else {
+            skip_step_elem.setAttribute("disabled", "disabled");
+        }
     }
 
     // Executes when DOM is finally loaded.
@@ -206,7 +351,7 @@
             stoke_style="black",
             linecap="round",
             linejoin="round");
-
+        
         const doodle_controls = document.getElementById("body-pose-form");
         doodle_controls.addEventListener('submit', async (e) => {
             // Prevent the default form submit
@@ -217,36 +362,36 @@
             let imageBlob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
 
             // Get Seed Value.
-            const use_specific_seed_elem = document.getElementById("use-specific-seed");
+            const use_specific_seed_elem = document.getElementById("use-specific-seed-doodle");
             if (use_specific_seed_elem.checked) {
-                const seed_elem = document.getElementById("seed-val");
+                const seed_elem = document.getElementById("seed-val-doodle");
                 seed_value = seed_elem.value;
             } else {
                 seed_value = "";
             }
 
             // Get Sampling Algorithm.
-            const sampling_alg_elem = document.getElementById("sampling-alg");
+            const sampling_alg_elem = document.getElementById("sampling-alg-doodle");
             sampling_alg_value = sampling_alg_elem.value;
 
             // Get Steps to skip (Low Resolution).
             if (sampling_alg_value == "ddim") {
-                const base_skip_steps_elem = document.getElementById("base-skip-steps");
-                base_skip_steps_value = base_skip_steps_elem.value;
+                var base_skip_steps_elem = document.getElementById("base-skip-steps-doodle");
+                var base_skip_steps_value = base_skip_steps_elem.value;
             } else {
                 base_skip_steps_value = "";
             }
 
             // Get Upsample Boolean.
-            const upsample_elem = document.getElementById("upsample");
+            const upsample_elem = document.getElementById("upsample-doodle");
             upsample_value = upsample_elem.checked;
 
             // Get Steps to skip (Super Resolution).
             if (upsample_value) {
-                const sr_skip_steps_elem = document.getElementById("sr-skip-steps");
-                sr_skip_steps_value = sr_skip_steps_elem.value;
+                var sr_skip_steps_elem = document.getElementById("sr-skip-steps-doodle");
+                var sr_skip_steps_value = sr_skip_steps_elem.value;
             } else {
-                sr_skip_steps_value = "";
+                var sr_skip_steps_value = "";
             }
 
             let formData = new FormData();
@@ -270,9 +415,88 @@
             let result = await response.json();
             if (result["status"] === 200) {
                 image_b64 = result["image"];
-                show_generated_doodle_image(image_b64);
+                show_generated_image(image_b64, "doodle");
             }
         });
-    });    
+
+        const myface_controls = document.getElementById("face-form");
+        myface_controls.addEventListener('submit', async (e) => {
+            // Prevent the default form submit
+            e.preventDefault();
+
+            /* Get Input controls */
+            const left_eye_elem = document.getElementById("left-eye-open-face");
+            const left_eye_value = left_eye_elem.checked;
+            
+            const right_eye_elem = document.getElementById("right-eye-open-face");
+            const right_eye_value = right_eye_elem.checked;
+            
+            const mouth_elem = document.getElementById("mouth-open-face");
+            const mouth_value = mouth_elem.checked;
+            
+            const showing_teeth_elem = document.getElementById("show-teeth-face");
+            const showing_teeth_value = showing_teeth_elem.checked;
+            
+            // Get Seed Value.
+            const use_specific_seed_elem = document.getElementById("use-specific-seed-face");
+            if (use_specific_seed_elem.checked) {
+                const seed_elem = document.getElementById("seed-val-face");
+                seed_value = seed_elem.value;
+            } else {
+                seed_value = "";
+            }
+
+            // Get Sampling Algorithm.
+            const sampling_alg_elem = document.getElementById("sampling-alg-face");
+            const sampling_alg_value = sampling_alg_elem.value;
+
+            // Get Steps to skip (Low Resolution).
+            if (sampling_alg_value == "ddim") {
+                const base_skip_steps_elem = document.getElementById("base-skip-steps-face");
+                base_skip_steps_value = base_skip_steps_elem.value;
+            } else {
+                base_skip_steps_value = "";
+            }
+
+            // Get Upsample Boolean.
+            const upsample_elem = document.getElementById("upsample-face");
+            const upsample_value = upsample_elem.checked;
+
+            // Get Steps to skip (Super Resolution).
+            if (upsample_value) {
+                const sr_skip_steps_elem = document.getElementById("sr-skip-steps-face");
+                var sr_skip_steps_value = sr_skip_steps_elem.value;
+            } else {
+                var sr_skip_steps_value = "";
+            }
+
+            let formData = new FormData();
+            formData.append("left_eye", left_eye_value);
+            formData.append("right_eye", right_eye_value);
+            formData.append("mouth", mouth_value);
+            formData.append("showing_teeth", showing_teeth_value);
+            formData.append("seed", seed_value);
+            formData.append("sample_alg", sampling_alg_value);
+            formData.append("base_skip_step", base_skip_steps_value);
+            formData.append("upsample", upsample_value);
+            formData.append("sr_skip_step", sr_skip_steps_value);
+            
+            const form = e.target;
+            let response = await fetch(
+                form.action, {
+                    headers: {
+                        "contenttype": "multipart/form-data",
+                    },
+                    method: "POST",
+                    body: formData
+                }
+            );
+            let result = await response.json();
+            if (result["status"] === 200) {
+                image_b64 = result["image"];
+                show_generated_image(image_b64, "face");
+            }
+        });
+    });
 </script>
 {% endblock %}

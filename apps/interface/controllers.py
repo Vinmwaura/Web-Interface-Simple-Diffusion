@@ -10,15 +10,18 @@ from apps.interface.utils import convert_tensor_to_numpy
 
 
 # Generates Low Resolution Image using Diffusion Model.
-def generate_base_diffusion(cond_img, commands, log=print):
-    img_dim = (
-        int(current_app.config["DOODLE_IMG_DIM"]),
-        int(current_app.config["DOODLE_IMG_DIM"]))
-    cond_img = cv2.resize(
-        cond_img,
-        img_dim,
-        interpolation=cv2.INTER_AREA)
-    
+def generate_base_diffusion(commands, cond_img=None, log=print):
+    if cond_img is not None:
+        img_dim = (
+            int(current_app.config["DOODLE_IMG_DIM"]),
+            int(current_app.config["DOODLE_IMG_DIM"]))
+        cond_img = cv2.resize(
+            cond_img,
+            img_dim,
+            interpolation=cv2.INTER_AREA)
+    else:
+        cond_img = None
+
     img_tensor = diffusion_sampling(
         raw_args=commands,
         log=log,

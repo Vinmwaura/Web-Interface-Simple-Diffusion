@@ -11,6 +11,7 @@
 /* Medium devices (landscape tablets, 1200px and up) */
 @media only screen and (min-width: 1200px) {
     .interface-content {
+        min-height: 720px;
         flex-direction: row;
     }
 
@@ -61,11 +62,11 @@
     border-radius: 5px;
 }
 
-#controls-fieldset span {
+.controls-fieldset span {
     margin: 10px 0;
 }
 
-.sampling-option {
+.sampling-option, .controller-option {
     margin: 10px 0;
 }
 
@@ -87,7 +88,7 @@
     margin: 10px;
 }
 
-#controls-fieldset input[type="button"], #controls-fieldset input[type="submit"] {
+.controls-fieldset input[type="button"], .controls-fieldset input[type="submit"] {
     width: 100px;
     height: 30px;
     border-radius: 30px;
@@ -102,6 +103,6 @@
     background-color: red;
 }
 
-#controls-fieldset input {
+.controls-fieldset input {
     margin: 5px 0;
 }

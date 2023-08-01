@@ -32,14 +32,14 @@ body {
 }
 
 /* Style the tab content */
-.tabcontent {
+.tab-content {
     display: none;
     padding: 6px 12px;
     border: 1px solid #ccc;
     border-top: none;
 }
 
-.tabcontent {
+.tab-content {
     animation: fadeEffect 1s; /* Fading effect takes 1 second */
 }
 
