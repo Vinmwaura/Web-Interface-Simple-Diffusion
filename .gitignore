@@ -1,3 +1,7 @@
 *.pyc
 *.env
-diffusion_code/
+
+model_libs/*/*
+models/*.json
+models/*.pt
+

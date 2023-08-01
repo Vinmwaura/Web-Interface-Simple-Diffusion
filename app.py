@@ -4,6 +4,8 @@ from flask import Flask
 
 from config import Config
 
+import model_libs
+
 def create_app(config_class=Config):
     template_dir = os.path.abspath("./apps/templates")
     static_dir = os.path.abspath("./apps/static")
