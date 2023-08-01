@@ -8,35 +8,31 @@
 <div class="interface">
     <!-- Tab links -->
     <nav class="tab">
-        <button class="tablinks" onclick="openTab(event, 'mybody')" id="defaultOpen">Body Pose</button>
+        <button class="tab-links" onclick="openTab(event, 'my-body')" id="default-open">Body Pose</button>
     </nav>
 
-    <!-- Tab Contents -->
-    <div id="mybody" class="tabcontent">
-        <!-- Body Poses Doodle -->
+    <!-- Body Poses Doodle Tab -->
+    <div id="my-body" class="tab-content">
         <div class="interface-content">
             <div class="interface-inputs">
                 <div class="interface-body">
-                    <form action="" id="body-pose-form">
+                    <form action="{{ url_for('interface.generate_doodle_images') }}" method="POST" class="interface-form" id="body-pose-form">
                         <fieldset id="canvas-fieldset">
                             <legend>Canvas</legend>
                             <!-- Paint Canvas -->
-                            <canvas id="paint-canvas" width="512" height="512"></canvas>
+                            <canvas id="paint-canvas" width="512" height="512">
+                                Your browser does not support the HTML5 canvas tag.
+                            </canvas>
                         </fieldset>
 
                         <fieldset id="controls-fieldset">
                             <legend>Controls</legend>
                             <!-- Model Input Controls-->
                             <input id="reset-btn" type="button" value="Reset">
-                            <input id="generate-btn" type="submit" value="Generate">
-                            <div class="sampling-option">
-                                <input
-                                    id="specificseed"
-                                    type="checkbox"
-                                    name="specificseed"
-                                    value="specificseed">
-                                <label for="specificseed"> Use Specific seed</label>
-                            </div>
+                            <input
+                                class="generate-btn"
+                                type="submit"
+                                value="Generate">
                         </fieldset>
 
                         <fieldset>
@@ -44,57 +40,73 @@
                             <legend>Sampling Parameters</legend>
 
                             <div class="sampling-option">
-                                <label for="seed_val" class="option-full-width">Seed:</label>
+                                <input
+                                    id="use-specific-seed"
+                                    type="checkbox"
+                                    name="use-specific-seed"
+                                    value="use-specific-seed"
+                                    onclick="toggle_seed_enable();">
+                                <label for="use-specific-seed"> Use Specific seed</label>
+                            </div>
+
+                            <div class="sampling-option">
+                                <label for="seed-val" class="option-full-width">Seed:</label>
                                 <input
                                     class="option-full-width"
-                                    id="seed_val"
+                                    id="seed-val"
                                     type="number"
                                     min="0"
                                     step="1"
                                     pattern="[0-9]{1,5}"
                                     lang="en-150"
                                     placeholder="Seed value e.g 69"
-                                    disabled>
+                                    disabled
+                                    required>
                             </div>
 
                             <div class="sampling-option">
-                                <label for="sampling_alg" class="option-full-width">Sampling Algorithm:</label>
-                                <select name="sampling_alg" class="option-full-width" id="sampling_alg">
+                                <label for="sampling-alg" class="option-full-width">Sampling Algorithm:</label>
+                                <select name="sampling-alg" class="option-full-width" id="sampling-alg" onchange="toggle_base_skip_steps()">
                                     <option value="ddpm">DDPM</option>
                                     <option value="ddim">DDIM</option>
                                 </select>
                             </div>
 
                             <div class="sampling-option">
-                                <label for="sampling_steps" class="option-full-width">Steps to skip:</label><br>
+                                <label for="base-skip-steps" class="option-full-width">Steps to skip(Base): <output id="baseskipstepout">100</output></label>
                                 <input
                                     class="option-full-width"
-                                    id="sampling_steps"
+                                    id="base-skip-steps"
                                     type="range"
                                     min="1"
                                     max="1000"
-                                    value="10"
+                                    value="100"
                                     class="slider"
-                                    oninput="sampleStepId.value=this.value">
-                                <output id="sampleStepId">10</output>
+                                    oninput="baseskipstepout.value=this.value"
+                                    disabled>
                             </div>
-            
-                            <div class="sampling-option">
-                                <label for="useGPU"> Use GPU (CUDA)</label>
-                                <input
-                                    id="useGPU"
-                                    type="checkbox"
-                                    name="useGPU"
-                                    value="useGPU">
-                            </div>
-
                             <div class="sampling-option">
                                 <label for="upsample"> Upsample Image (Max Res: 256px)</label>
                                 <input
                                     id="upsample"
                                     type="checkbox"
                                     name="upsample"
-                                    value="upsample">
+                                    value="upsample"
+                                    onclick="toggle_sr_skip_steps()">
+                            </div>
+
+                            <div class="sampling-option">
+                                <label for="sr-skip-steps" class="option-full-width">Steps to skip(Super Resolution): <output id="srskipstepout">100</output></label>
+                                <input
+                                    class="option-full-width"
+                                    id="sr-skip-steps"
+                                    type="range"
+                                    min="1"
+                                    max="1000"
+                                    value="100"
+                                    class="slider"
+                                    oninput="srskipstepout.value=this.value"
+                                    disabled>
                             </div>
                         </fieldset>
                     </form>
@@ -105,8 +117,8 @@
                     <img id="generated-img" src="{{ url_for('static', filename='media/placeholder/placeholder_512x512.png') }}", alt="Generated/Placeholder Image"/>
                 </div>
                 <div class="output-controls">
-                    <input id="save-btn" type="button" value="Save">
-                    <input id="clear-btn" type="button" value="Clear">
+                    <input id="save-btn" type="button" value="Save" onclick="save_generated_doodle_image()">
+                    <input id="clear-btn" type="button" value="Clear" onclick="clear_generated_image()">
                 </div>
             </div>
         </div>
@@ -118,16 +130,149 @@
 <script defer type="text/javascript" src="{{ url_for('static', filename='js/canvas.js') }}"></script>
 
 <script>
+    /* Clears generated Body Pose Images */
+    function clear_generated_image() {
+        const img_elem = document.getElementById("generated-img");
+        const placeholder_img_url = "{{ url_for('static', filename='media/placeholder/placeholder_512x512.png') }}";
+        img_elem.src = placeholder_img_url;
+    }
+
+    /* Save generated Body Pose Images */
+    function save_generated_doodle_image() {
+        const placeholder_img_path = "{{ url_for('static', filename='media/placeholder/placeholder_512x512.png') }}";
+        const img_elem = document.getElementById("generated-img");
+        var img_src = img_elem.src;
+
+        var a  = document.createElement('a');
+        a.href = img_src || placeholder_img_path;
+        a.download = "image.png";
+        a.click()
+    }
+
+    /* Shows generated Body Pose Image */
+    function show_generated_doodle_image(img_b64) {
+        const b64_image = "data:image/png;base64," + img_b64;
+        const img_elem = document.getElementById("generated-img");
+        img_elem.src = b64_image;
+    }
+
+    /* Toggle Manual seed */
+    function toggle_seed_enable() {
+        const seed_elem = document.getElementById("seed-val");
+        const is_seed_enabled = seed_elem.disabled;
+        if(is_seed_enabled) {
+            seed_elem.disabled = false;
+            seed_elem.focus();
+        } else {
+            seed_elem.disabled = true;
+        }
+    }
+
+    /* Toggles skip steps option for base diffusion */
+    function toggle_base_skip_steps() {
+        const sample_alg = document.getElementById("sampling-alg");
+        const skip_step_elem = document.getElementById("base-skip-steps");
+        const is_disabled = skip_step_elem.disabled;
+        const sample_alg_val = sample_alg.value;
+
+        if (sample_alg_val==="ddim" && is_disabled) {
+            skip_step_elem.disabled = false;
+        } else if (sample_alg_val==="ddpm" && !is_disabled) {
+            skip_step_elem.disabled = true;
+        }
+    }
+
+    /* Toggles skip steps option for SuperResolution diffusion */
+    function toggle_sr_skip_steps() {
+        const upsample_elem = document.getElementById("upsample");
+        const upsample_checked = upsample_elem.checked;
+        const skip_step_elem = document.getElementById("sr-skip-steps");
+        const is_disabled = skip_step_elem.disabled;
+
+        skip_step_elem.disabled = !is_disabled;
+    }
+
     // Executes when DOM is finally loaded.
     window.addEventListener("DOMContentLoaded", function() {
         // Activates first tab to load it's content onto screen.
-        document.getElementById("defaultOpen").click();
+        document.getElementById("default-open").click();
 
         // Creates paint-canvas and adds it to the screen.
-        const [canvas, context] = create_canvas("paint-canvas", 10, "black");
-    
-        // Set Clear functionality for clear button.
-        set_clear_canvas_btn("reset-btn", canvas, context);
-    });
+        const [canvas, context, background] = create_canvas(
+            canvas_id="paint-canvas",
+            clear_btn_id="reset-btn",
+            image_url="{{ url_for('static', filename='media/placeholder/Inital_doodle.jpg') }}",
+            stroke_line_width=20,
+            stoke_style="black",
+            linecap="round",
+            linejoin="round");
+
+        const doodle_controls = document.getElementById("body-pose-form");
+        doodle_controls.addEventListener('submit', async (e) => {
+            // Prevent the default form submit
+            e.preventDefault();
+
+            /* Gets Canvas Image*/
+            const canvas = document.getElementById("paint-canvas");
+            let imageBlob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+
+            // Get Seed Value.
+            const use_specific_seed_elem = document.getElementById("use-specific-seed");
+            if (use_specific_seed_elem.checked) {
+                const seed_elem = document.getElementById("seed-val");
+                seed_value = seed_elem.value;
+            } else {
+                seed_value = "";
+            }
+
+            // Get Sampling Algorithm.
+            const sampling_alg_elem = document.getElementById("sampling-alg");
+            sampling_alg_value = sampling_alg_elem.value;
+
+            // Get Steps to skip (Low Resolution).
+            if (sampling_alg_value == "ddim") {
+                const base_skip_steps_elem = document.getElementById("base-skip-steps");
+                base_skip_steps_value = base_skip_steps_elem.value;
+            } else {
+                base_skip_steps_value = "";
+            }
+
+            // Get Upsample Boolean.
+            const upsample_elem = document.getElementById("upsample");
+            upsample_value = upsample_elem.checked;
+
+            // Get Steps to skip (Super Resolution).
+            if (upsample_value) {
+                const sr_skip_steps_elem = document.getElementById("sr-skip-steps");
+                sr_skip_steps_value = sr_skip_steps_elem.value;
+            } else {
+                sr_skip_steps_value = "";
+            }
+
+            let formData = new FormData();
+            formData.append("canvas_image", imageBlob, "image.png");
+            formData.append("seed", seed_value);
+            formData.append("sample_alg", sampling_alg_value);
+            formData.append("base_skip_step", base_skip_steps_value);
+            formData.append("upsample", upsample_value);
+            formData.append("sr_skip_step", sr_skip_steps_value);
+            
+            const form = e.target;
+            let response = await fetch(
+                form.action, {
+                    headers: {
+                        "contenttype": "multipart/form-data",
+                    },
+                    method: "POST",
+                    body: formData
+                }
+            );
+            let result = await response.json();
+            if (result["status"] === 200) {
+                image_b64 = result["image"];
+                show_generated_doodle_image(image_b64);
+            }
+        });
+    });    
 </script>
 {% endblock %}

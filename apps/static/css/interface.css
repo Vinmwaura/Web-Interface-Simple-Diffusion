@@ -8,8 +8,8 @@
     justify-content: space-evenly;
 }
 
-/* Medium devices (landscape tablets, 768px and up) */
-@media only screen and (min-width: 768px) {
+/* Medium devices (landscape tablets, 1200px and up) */
+@media only screen and (min-width: 1200px) {
     .interface-content {
         flex-direction: row;
     }
@@ -23,10 +23,14 @@
         width: 600px;
         height: 600px;
     }
+
+    .interface-outputs .interface-body {
+        overflow: auto;
+    }
 }
 
-/* Medium devices (landscape tablets, 768px and below) */
-@media only screen and (max-width: 768px) {
+/* Medium devices (landscape tablets, 1200px and below) */
+@media only screen and (max-width: 1200px) {
     .interface-content {
         flex-direction: column;
     }
@@ -35,14 +39,6 @@
         margin-top: 10px;
     }
 }
-/*
-.interface-content {
-    display: flex;
-    justify-content: space-evenly;
-    flex-direction: row;
-    height: 720px;
-}
-*/
 
 .interface-outputs > .interface-body {
     display: flex;
@@ -98,7 +94,7 @@
     color: white;
 }
 
-#generate-btn {
+.generate-btn {
     background-color: green;
 }
 
