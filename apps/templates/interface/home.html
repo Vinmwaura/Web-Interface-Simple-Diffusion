@@ -11,6 +11,7 @@
     <nav class="tab">
         <button class="tab-links" onclick="openTab(event, 'my-body')" id="default-open">Body Pose</button>
         <button class="tab-links" onclick="openTab(event, 'my-face')">Face</button>
+        <button class="tab-links" onclick="openTab(event, 'celeb-face')">Celeb-Face</button>
     </nav>
 
     <!-- Body Poses Doodle Tab -->
@@ -18,7 +19,7 @@
         <div class="interface-content">
             <div class="interface-inputs">
                 <div class="interface-body">
-                    <form action="{{ url_for('interface.generate_doodle_images') }}" method="POST" class="interface-form" id="body-pose-form">
+                    <form action="{{ url_for('interface.generate_body_poses') }}" method="POST" class="interface-form" id="body-pose-form">
                         <fieldset class="canvas-fieldset">
                             <legend>Canvas</legend>
                             <!-- Paint Canvas -->
@@ -127,12 +128,12 @@
         </div>
     </div>
 
-    <!-- Face Tab -->
+    <!-- MyFace Tab -->
     <div id="my-face" class="tab-content">
         <div class="interface-content">
             <div class="interface-inputs">
                 <div class="interface-body">
-                    <form action="{{ url_for('interface.generate_myface_images') }}" method="POST" class="interface-form" id="face-form">
+                    <form action="{{ url_for('interface.generate_myface') }}" method="POST" class="interface-form" id="face-form">
                         <fieldset class="face-fieldset">
                             <legend>Face Controllers</legend>
 
@@ -267,6 +268,301 @@
                 <div class="output-controls">
                     <input id="save-btn" type="button" value="Save" onclick="save_generated_image('face')">
                     <input id="clear-btn" type="button" value="Clear" onclick="clear_generated_image('face')">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Celebrity Face Tab -->
+    <div id="celeb-face" class="tab-content">
+        <div class="interface-content">
+            <div class="interface-inputs">
+                <div class="interface-body">
+                    <form action="{{ url_for('interface.generate_celeb_faces') }}" method="POST" class="interface-form" id="celeb-face-form">
+                        <fieldset class="face-fieldset">
+                            <legend>Celeb Face Controllers</legend>
+                            
+                            <!-- Bald -->
+                            <div class="controller-option">
+                                <input
+                                    id="bald-celeb-face"
+                                    type="checkbox"
+                                    name="bald-celeb-face"
+                                    value="bald-celeb-face">
+                                <label for="bald-celeb-face"> Bald</label>
+                            </div>
+
+                            <!-- Black Hair -->
+                            <div class="controller-option">
+                                <input
+                                    id="black-hair-celeb-face"
+                                    type="checkbox"
+                                    name="black-hair-celeb-face"
+                                    value="black-hair-celeb-face">
+                                <label for="black-hair-celeb-face"> Black Hair</label>
+                            </div>
+
+                            <!-- Blond Hair -->
+                            <div class="controller-option">
+                                <input
+                                    id="blond-hair-celeb-face"
+                                    type="checkbox"
+                                    name="blond-hair-celeb-face"
+                                    value="blond-hair-celeb-face">
+                                <label for="blond-hair-celeb-face"> Blond Hair</label>
+                            </div>
+
+                            <!-- Brown Hair -->
+                            <div class="controller-option">
+                                <input
+                                    id="brown-hair-celeb-face"
+                                    type="checkbox"
+                                    name="brown-hair-celeb-face"
+                                    value="brown-hair-celeb-face">
+                                <label for="brown-hair-celeb-face"> Brown Hair</label>
+                            </div>
+
+                            <!-- Bushy Eyebrow -->
+                            <div class="controller-option">
+                                <input
+                                    id="bushy-eyebrow-celeb-face"
+                                    type="checkbox"
+                                    name="bushy-eyebrow-celeb-face"
+                                    value="bushy-eyebrow-celeb-face">
+                                <label for="bushy-eyebrow-celeb-face"> Bushy Eyebrow</label>
+                            </div>
+
+                            <!-- Eyeglasses -->
+                            <div class="controller-option">
+                                <input
+                                    id="eyeglasses-celeb-face"
+                                    type="checkbox"
+                                    name="eyeglasses-celeb-face"
+                                    value="eyeglasses-celeb-face">
+                                <label for="eyeglasses-celeb-face"> Eyeglasses</label>
+                            </div>
+
+                            <!-- Goatee -->
+                            <div class="controller-option">
+                                <input
+                                    id="goatee-celeb-face"
+                                    type="checkbox"
+                                    name="goatee-celeb-face"
+                                    value="goatee-celeb-face">
+                                <label for="goatee-celeb-face"> Goatee</label>
+                            </div>
+
+                            <!-- Gray Hair -->
+                            <div class="controller-option">
+                                <input
+                                    id="gray-hair-celeb-face"
+                                    type="checkbox"
+                                    name="gray-hair-celeb-face"
+                                    value="gray-hair-celeb-face">
+                                <label for="gray-hair-celeb-face"> Gray Hair</label>
+                            </div>
+
+                            <!-- Male -->
+                            <div class="controller-option">
+                                <input
+                                    id="male-celeb-face"
+                                    type="checkbox"
+                                    name="male-celeb-face"
+                                    value="male-celeb-face">
+                                <label for="male-celeb-face"> Male</label>
+                            </div>
+
+                            <!-- Mouth_Slightly_Open -->
+                            <div class="controller-option">
+                                <input
+                                    id="mouth-open-celeb-face"
+                                    type="checkbox"
+                                    name="mouth-open-celeb-face"
+                                    value="mouth-open-celeb-face">
+                                <label for="mouth-open-celeb-face"> Mouth Slightly Open</label>
+                            </div>
+
+                            <!-- Mustache -->
+                            <div class="controller-option">
+                                <input
+                                    id="mustache-celeb-face"
+                                    type="checkbox"
+                                    name="mustache-celeb-face"
+                                    value="mustache-celeb-face">
+                                <label for="mustache-celeb-face"> Mustache</label>
+                            </div>
+
+                            <!-- No_Beard -->
+                            <div class="controller-option">
+                                <input
+                                    id="no-beard-celeb-face"
+                                    type="checkbox"
+                                    name="no-beard-celeb-face"
+                                    value="no-beard-celeb-face">
+                                <label for="no-beard-celeb-face"> No Beard</label>
+                            </div>
+
+                            <!-- Sideburns -->
+                            <div class="controller-option">
+                                <input
+                                    id="sideburns-celeb-face"
+                                    type="checkbox"
+                                    name="sideburns-celeb-face"
+                                    value="sideburns-celeb-face">
+                                <label for="sideburns-celeb-face"> Sideburns</label>
+                            </div>
+
+                            <!-- Smiling -->
+                            <div class="controller-option">
+                                <input
+                                    id="smiling-celeb-face"
+                                    type="checkbox"
+                                    name="smiling-celeb-face"
+                                    value="smiling-celeb-face">
+                                <label for="smiling-celeb-face"> Smiling</label>
+                            </div>
+
+                            <!-- Straight_Hair -->
+                            <div class="controller-option">
+                                <input
+                                    id="straight-hair-celeb-face"
+                                    type="checkbox"
+                                    name="straight-hair-celeb-face"
+                                    value="straight-hair-celeb-face">
+                                <label for="straight-hair-celeb-face"> Straight Hair</label>
+                            </div>
+
+                            <!-- Wavy_Hair -->
+                            <div class="controller-option">
+                                <input
+                                    id="wavy-hair-celeb-face"
+                                    type="checkbox"
+                                    name="wavy-hair-celeb-face"
+                                    value="wavy-hair-celeb-face">
+                                <label for="wavy-hair-celeb-face"> Wavy Hair</label>
+                            </div>
+
+                            <!-- Wearing_Earrings -->
+                            <div class="controller-option">
+                                <input
+                                    id="wearing-earrings-celeb-face"
+                                    type="checkbox"
+                                    name="wearing-earrings-celeb-face"
+                                    value="wearing-earrings-celeb-face">
+                                <label for="wearing-earrings-celeb-face"> Wearing Earrings</label>
+                            </div>
+
+                            <!-- Wearing_Hat -->
+                            <div class="controller-option">
+                                <input
+                                    id="wearing-hat-celeb-face"
+                                    type="checkbox"
+                                    name="wearing-hat-celeb-face"
+                                    value="wearing-hat-celeb-face">
+                                <label for="wearing-hat-celeb-face"> Wearing Hat</label>
+                            </div>
+
+                            <!-- Wearing_Lipstick -->
+                            <div class="controller-option">
+                                <input
+                                    id="wearing-lipstick-celeb-face"
+                                    type="checkbox"
+                                    name="wearing-lipstick-celeb-face"
+                                    value="wearing-lipstick-celeb-face">
+                                <label for="wearing-lipstick-celeb-face"> Wearing Lipstick</label>
+                            </div>
+
+                            <!-- Wearing_Necklace -->
+                            <div class="controller-option">
+                                <input
+                                    id="wearing-necklace-celeb-face"
+                                    type="checkbox"
+                                    name="wearing-necklace-celeb-face"
+                                    value="wearing-necklace-celeb-face">
+                                <label for="wearing-necklace-celeb-face"> Wearing Necklace</label>
+                            </div>
+
+                            <!-- Wearing_Necktie -->
+                            <div class="controller-option">
+                                <input
+                                    id="wearing-necktie-celeb-face"
+                                    type="checkbox"
+                                    name="wearing-necktie-celeb-face"
+                                    value="wearing-necktie-celeb-face">
+                                <label for="wearing-necktie-celeb-face"> Wearing Necktie</label>
+                            </div>
+                        </fieldset>
+                        
+                        <fieldset class="controls-fieldset">
+                            <legend>Controls</legend>
+                            <!-- Model Input Controls-->
+                            <input
+                                class="generate-btn"
+                                type="submit"
+                                value="Generate">
+                        </fieldset>
+
+                        <fieldset>
+                            <!-- Diffusion Sampling Algorithms -->
+                            <legend>Sampling Parameters</legend>
+                            
+                            <div class="sampling-option">
+                                <input
+                                    id="use-specific-seed-celeb-face"
+                                    type="checkbox"
+                                    name="use-specific-seed-celeb-face"
+                                    value="use-specific-seed-celeb-face"
+                                    onclick="toggle_seed_enable('celeb-face');">
+                                <label for="use-specific-seed-celeb-face"> Use Specific seed</label>
+                            </div>
+
+                            <div class="sampling-option">
+                                <label for="seed-val" class="option-full-width">Seed:</label>
+                                <input
+                                    class="option-full-width"
+                                    id="seed-val-celeb-face"
+                                    type="number"
+                                    min="0"
+                                    step="1"
+                                    pattern="[0-9]{1,5}"
+                                    lang="en-150"
+                                    placeholder="Seed value e.g 69"
+                                    disabled
+                                    required>
+                            </div>
+
+                            <div class="sampling-option">
+                                <label for="sampling-alg-celeb-face" class="option-full-width">Sampling Algorithm:</label>
+                                <select name="sampling-alg-celeb-face" class="option-full-width" id="sampling-alg-celeb-face" onchange="toggle_base_skip_steps('face')">
+                                    <option value="ddim">DDIM</option>
+                                    <option value="ddpm">DDPM</option>
+                                </select>
+                            </div>
+
+                            <div class="sampling-option">
+                                <label for="base-skip-steps-celeb-face" class="option-full-width">Steps to skip(Base): <output id="baseskipstepoutface">100</output></label>
+                                <input
+                                    class="option-full-width"
+                                    id="base-skip-steps-celeb-face"
+                                    type="range"
+                                    min="1"
+                                    max="1000"
+                                    value="100"
+                                    class="slider"
+                                    oninput="baseskipstepoutface.value=this.value">
+                            </div>
+                        </fieldset>
+                    </form>
+                </div>
+            </div>
+
+            <div class="interface-outputs">
+                <div class="interface-body">
+                    <img id="generated-img-celeb-face" src="{{ url_for('static', filename='media/placeholder/placeholder_512x512.png') }}", alt="Generated/Placeholder Image"/>
+                </div>
+                <div class="output-controls">
+                    <input id="save-btn" type="button" value="Save" onclick="save_generated_image('celeb-face')">
+                    <input id="clear-btn" type="button" value="Clear" onclick="clear_generated_image('celeb-face')">
                 </div>
             </div>
         </div>
@@ -497,6 +793,143 @@
                 show_generated_image(image_b64, "face");
             }
         });
+
+        const celebface_controls = document.getElementById("celeb-face-form");
+        celebface_controls.addEventListener('submit', async (e) => {
+            // Prevent the default form submit
+            e.preventDefault();
+
+            /* Get Input controls */
+            const bald_elem = document.getElementById("bald-celeb-face");
+            const bald_value = bald_elem.checked;
+
+            const black_hair_elem = document.getElementById("black-hair-celeb-face");
+            const black_hair_value = black_hair_elem.checked;
+
+            const blond_elem = document.getElementById("blond-hair-celeb-face");
+            const blond_value = blond_elem.checked;
+
+            const brown_hair_elem = document.getElementById("brown-hair-celeb-face");
+            const brown_hair_value = brown_hair_elem.checked;
+
+            const bushy_eyebrow_elem = document.getElementById("bushy-eyebrow-celeb-face");
+            const bushy_eyebrow_value = bushy_eyebrow_elem.checked;
+
+            const eyeglasses_elem = document.getElementById("eyeglasses-celeb-face");
+            const eyeglasses_value = eyeglasses_elem.checked;
+
+            const goatee_elem = document.getElementById("goatee-celeb-face");
+            const goatee_value = goatee_elem.checked;
+
+            const gray_hair_elem = document.getElementById("gray-hair-celeb-face");
+            const gray_hair_value = gray_hair_elem.checked;
+
+            const male_elem = document.getElementById("male-celeb-face");
+            const male_value = male_elem.checked;
+
+            const mouth_open_elem = document.getElementById("mouth-open-celeb-face");
+            const mouth_open_value = mouth_open_elem.checked;
+
+            const mustache_elem = document.getElementById("mustache-celeb-face");
+            const mustache_value = mustache_elem.checked;
+
+            const no_beard_elem = document.getElementById("no-beard-celeb-face");
+            const no_beard_value = no_beard_elem.checked;
+
+            const sideburns_elem = document.getElementById("sideburns-celeb-face");
+            const sideburns_value = sideburns_elem.checked;
+
+            const smiling_elem = document.getElementById("smiling-celeb-face");
+            const smiling_value = smiling_elem.checked;
+
+            const straight_hair_elem = document.getElementById("straight-hair-celeb-face");
+            const straight_hair_value = straight_hair_elem.checked;
+
+            const wavy_hair_elem = document.getElementById("wavy-hair-celeb-face");
+            const wavy_hair_value = wavy_hair_elem.checked;
+
+            const wearing_earrings_elem = document.getElementById("wearing-earrings-celeb-face");
+            const wearing_earrings_value = wearing_earrings_elem.checked;
+
+            const wearing_hat_elem = document.getElementById("wearing-hat-celeb-face");
+            const wearing_hat_value = wearing_hat_elem.checked;
+
+            const wearing_lipstick_elem = document.getElementById("wearing-lipstick-celeb-face");
+            const wearing_lipstick_value = wearing_lipstick_elem.checked;
+
+            const wearing_necklace_elem = document.getElementById("wearing-necklace-celeb-face");
+            const wearing_necklace_value = wearing_necklace_elem.checked;
+
+            const wearing_necktie_elem = document.getElementById("wearing-necktie-celeb-face");
+            const wearing_necktie_value = wearing_necktie_elem.checked;
+
+
+            // Get Seed Value.
+            const use_specific_seed_elem = document.getElementById("use-specific-seed-celeb-face");
+            if (use_specific_seed_elem.checked) {
+                const seed_elem = document.getElementById("seed-val-celeb-face");
+                seed_value = seed_elem.value;
+            } else {
+                seed_value = "";
+            }
+
+            // Get Sampling Algorithm.
+            const sampling_alg_elem = document.getElementById("sampling-alg-celeb-face");
+            const sampling_alg_value = sampling_alg_elem.value;
+
+            // Get Steps to skip (Low Resolution).
+            if (sampling_alg_value == "ddim") {
+                const base_skip_steps_elem = document.getElementById("base-skip-steps-celeb-face");
+                base_skip_steps_value = base_skip_steps_elem.value;
+            } else {
+                base_skip_steps_value = "";
+            }
+
+
+            let formData = new FormData();
+            formData.append("bald", bald_value);
+            formData.append("black_hair", black_hair_value);
+            formData.append("blond_hair", blond_value);
+            formData.append("brown_hair", brown_hair_value);
+            formData.append("bushy_eyebrows", bushy_eyebrow_value);
+            formData.append("eyeglasses", eyeglasses_value);
+            formData.append("goatee", goatee_value);
+            formData.append("gray_hair", gray_hair_value);
+            formData.append("male", male_value);
+            formData.append("mouth_open", mouth_open_value);
+            formData.append("mustache", mustache_value);
+            formData.append("no_beard", no_beard_value);
+            formData.append("sideburns", sideburns_value);
+            formData.append("smiling", smiling_value);
+            formData.append("straight_hair", straight_hair_value);
+            formData.append("wavy_hair", wavy_hair_value);
+            formData.append("wearing_earrings", wearing_earrings_value);
+            formData.append("smiling", smiling_value);
+            formData.append("wearing_hat", wearing_hat_value);
+            formData.append("wearing_lipstick", wearing_lipstick_value);
+            formData.append("wearing_necklace", wearing_necklace_value);
+            formData.append("wearing_necktie", wearing_necktie_value);
+            formData.append("seed", seed_value);
+            formData.append("sample_alg", sampling_alg_value);
+            formData.append("base_skip_step", base_skip_steps_value);
+
+            const form = e.target;
+            let response = await fetch(
+                form.action, {
+                    headers: {
+                        "contenttype": "multipart/form-data",
+                    },
+                    method: "POST",
+                    body: formData
+                }
+            );
+            let result = await response.json();
+            if (result["status"] === 200) {
+                image_b64 = result["image"];
+                show_generated_image(image_b64, "celeb-face");
+            }
+        });
+
     });
 </script>
 {% endblock %}
