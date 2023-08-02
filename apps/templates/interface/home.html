@@ -12,6 +12,7 @@
         <button class="tab-links" onclick="openTab(event, 'my-body')" id="default-open">Body Pose</button>
         <button class="tab-links" onclick="openTab(event, 'my-face')">Face</button>
         <button class="tab-links" onclick="openTab(event, 'celeb-face')">Celeb-Face</button>
+        <button class="tab-links" onclick="openTab(event, 'anime-portraits')">Anime Portraits</button>
     </nav>
 
     <!-- Body Poses Doodle Tab -->
@@ -567,6 +568,103 @@
             </div>
         </div>
     </div>
+
+    <!-- Anime Portraits Tab -->
+    <div id="anime-portraits" class="tab-content">
+        <div class="interface-content">
+            <div class="interface-inputs">
+                <div class="interface-body">
+                    <form action="{{ url_for('interface.generate_anime_portraits') }}" method="POST" class="interface-form" id="anime-portraits-form">
+                        <fieldset class="anime-portraits-fieldset">
+                            <legend>Anime Portraits Controllers</legend>
+                            {% for i in range(75) %}
+                            <div class="controller-option">
+                                <label>
+                                    <input type="radio" name="portraits-centroid" value="{{i}}" required>
+                                    <img 
+                                        id="anime-portraits-centroid-{{i}}" 
+                                        src="{{ url_for('static', filename='media/anime_portraits_centroids/'+ i|string + '.jpg') }}",
+                                        alt="Anime Portraits_{{i}}"/>
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </fieldset>
+                        
+                        <fieldset class="controls-fieldset">
+                            <legend>Controls</legend>
+                            <!-- Model Input Controls-->
+                            <input
+                                class="generate-btn"
+                                type="submit"
+                                value="Generate">
+                        </fieldset>
+
+                        <fieldset>
+                            <!-- Diffusion Sampling Algorithms -->
+                            <legend>Sampling Parameters</legend>
+                            
+                            <div class="sampling-option">
+                                <input
+                                    id="use-specific-seed-anime-portraits"
+                                    type="checkbox"
+                                    name="use-specific-seed-anime-portraits"
+                                    value="use-specific-seed-anime-portraits"
+                                    onclick="toggle_seed_enable('anime-portraits');">
+                                <label for="use-specific-seed-anime-portraits"> Use Specific seed</label>
+                            </div>
+
+                            <div class="sampling-option">
+                                <label for="seed-val" class="option-full-width">Seed:</label>
+                                <input
+                                    class="option-full-width"
+                                    id="seed-val-anime-portraits"
+                                    type="number"
+                                    min="0"
+                                    step="1"
+                                    pattern="[0-9]{1,5}"
+                                    lang="en-150"
+                                    placeholder="Seed value e.g 69"
+                                    disabled
+                                    required>
+                            </div>
+
+                            <div class="sampling-option">
+                                <label for="sampling-alg-anime-portraits" class="option-full-width">Sampling Algorithm:</label>
+                                <select name="sampling-alg-anime-portraits" class="option-full-width" id="sampling-alg-anime-portraits" onchange="toggle_base_skip_steps('anime-portraits')">
+                                    <option value="ddim">DDIM</option>
+                                    <option value="ddpm">DDPM</option>
+                                </select>
+                            </div>
+
+                            <div class="sampling-option">
+                                <label for="base-skip-steps-anime-portraits" class="option-full-width">Steps to skip(Base): <output id="baseskipstepanime">100</output></label>
+                                <input
+                                    class="option-full-width"
+                                    id="base-skip-steps-anime-portraits"
+                                    type="range"
+                                    min="1"
+                                    max="1000"
+                                    value="100"
+                                    class="slider"
+                                    oninput="baseskipstepoutanime.value=this.value">
+                            </div>
+                        </fieldset>
+                    </form>
+                </div>
+            </div>
+
+            <div class="interface-outputs">
+                <div class="interface-body">
+                    <img id="generated-img-anime-portraits" src="{{ url_for('static', filename='media/placeholder/placeholder_512x512.png') }}", alt="Generated/Placeholder Image"/>
+                </div>
+                <div class="output-controls">
+                    <input id="save-btn" type="button" value="Save" onclick="save_generated_image('anime-portraits')">
+                    <input id="clear-btn" type="button" value="Clear" onclick="clear_generated_image('anime-portraits')">
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 {% endblock %}
 
@@ -930,6 +1028,57 @@
             }
         });
 
+        const animeportraits_controls = document.getElementById("anime-portraits-form");
+        animeportraits_controls.addEventListener('submit', async (e) => {
+            // Prevent the default form submit
+            e.preventDefault();
+
+            /* Get Input controls */
+            centroids_index = document.querySelector('input[name="portraits-centroid"]:checked').value;
+
+            // Get Seed Value.
+            const use_specific_seed_elem = document.getElementById("use-specific-seed-anime-portraits");
+            if (use_specific_seed_elem.checked) {
+                const seed_elem = document.getElementById("seed-val-anime-portraits");
+                seed_value = seed_elem.value;
+            } else {
+                seed_value = "";
+            }
+
+            // Get Sampling Algorithm.
+            const sampling_alg_elem = document.getElementById("sampling-alg-anime-portraits");
+            const sampling_alg_value = sampling_alg_elem.value;
+
+            // Get Steps to skip (Low Resolution).
+            if (sampling_alg_value == "ddim") {
+                const base_skip_steps_elem = document.getElementById("base-skip-steps-anime-portraits");
+                base_skip_steps_value = base_skip_steps_elem.value;
+            } else {
+                base_skip_steps_value = "";
+            }
+
+            let formData = new FormData();
+            formData.append("centroids_index", centroids_index);
+            formData.append("seed", seed_value);
+            formData.append("sample_alg", sampling_alg_value);
+            formData.append("base_skip_step", base_skip_steps_value);
+
+            const form = e.target;
+            let response = await fetch(
+                form.action, {
+                    headers: {
+                        "contenttype": "multipart/form-data",
+                    },
+                    method: "POST",
+                    body: formData
+                }
+            );
+            let result = await response.json();
+            if (result["status"] === 200) {
+                image_b64 = result["image"];
+                show_generated_image(image_b64, "anime-portraits");
+            }
+        });
     });
 </script>
 {% endblock %}
