@@ -1,12 +1,14 @@
 {% extends "base.html" %}
 
+{% from "interface/interface_macro.html" import input_checkbox with context %}
+
 {% block static %}
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/interface.css') }}">
 {% endblock %}
 
 {% block content %}
-<div class="interface">
 
+<div class="interface">
     <!-- Tab links -->
     <nav class="tab">
         <button class="tab-links" onclick="openTab(event, 'my-body')" id="default-open">Body Pose</button>
@@ -15,16 +17,17 @@
         <button class="tab-links" onclick="openTab(event, 'anime-portraits')">Anime Portraits</button>
     </nav>
 
-    <!-- Body Poses Doodle Tab -->
+    <!--Body Poses Tab -->
     <div id="my-body" class="tab-content">
         <div class="interface-content">
             <div class="interface-inputs">
                 <div class="interface-body">
                     <form action="{{ url_for('interface.generate_body_poses') }}" method="POST" class="interface-form" id="body-pose-form">
-                        <fieldset class="canvas-fieldset">
+                        <!-- Canvas -->
+                        <fieldset id="canvas-fieldset" class="input-fieldset">
                             <legend>Canvas</legend>
                             <!-- Paint Canvas -->
-                            <canvas id="paint-canvas" width="512" height="512">
+                            <canvas id="body-pose-canvas-editor" class="body-pose-canvas" width="512" height="512">
                                 Your browser does not support the HTML5 canvas tag.
                             </canvas>
                         </fieldset>
@@ -32,32 +35,31 @@
                         <fieldset class="controls-fieldset">
                             <legend>Controls</legend>
                             <!-- Model Input Controls-->
-                            <input id="reset-btn" type="button" value="Reset">
+                            <input id="body-pose-canvas-reset" class="canvas-reset-btn" type="button" value="Reset">
                             <input
                                 class="generate-btn"
                                 type="submit"
                                 value="Generate">
                         </fieldset>
 
-                        <fieldset>
+                        <fieldset class="sampling-fieldset">
                             <!-- Diffusion Sampling Algorithms -->
                             <legend>Sampling Parameters</legend>
-
                             <div class="sampling-option">
                                 <input
-                                    id="use-specific-seed-doodle"
+                                    id="use-specific-seed-body-pose"
                                     type="checkbox"
-                                    name="use-specific-seed-doodle"
-                                    value="use-specific-seed-doodle"
-                                    onclick="toggle_seed_enable('doodle');">
-                                <label for="use-specific-seed-doodle"> Use Specific seed</label>
+                                    name="use-specific-seed-body-pose"
+                                    value="use-specific-seed-body-pose"
+                                    onclick="toggle_seed_enable('body-pose');">
+                                <label for="use-specific-seed-body-pose"> Use Specific seed</label>
                             </div>
 
                             <div class="sampling-option">
-                                <label for="seed-val-doodle" class="option-full-width">Seed:</label>
+                                <label for="seed-val-body-pose" class="option-full-width">Seed:</label>
                                 <input
                                     class="option-full-width"
-                                    id="seed-val-doodle"
+                                    id="seed-val-body-pose"
                                     type="number"
                                     min="0"
                                     step="1"
@@ -67,49 +69,47 @@
                                     disabled
                                     required>
                             </div>
-
+                            <hr>
                             <div class="sampling-option">
-                                <label for="sampling-alg-doodle" class="option-full-width">Sampling Algorithm:</label>
-                                <select name="sampling-alg-doodle" class="option-full-width" id="sampling-alg-doodle" onchange="toggle_base_skip_steps('doodle')">
+                                <label for="sampling-alg-body-pose" class="option-full-width">Sampling Algorithm:</label>
+                                <select name="sampling-alg-body-pose" class="option-full-width" id="sampling-alg-body-pose" onchange="toggle_base_skip_steps('body-pose')">
                                     <option value="ddim">DDIM</option>
                                     <option value="ddpm">DDPM</option>
                                 </select>
                             </div>
-
                             <div class="sampling-option">
-                                <label for="base-skip-steps-doodle" class="option-full-width">Steps to skip(Base): <output id="baseskipstepoutdoodle">100</output></label>
+                                <label for="base-skip-steps-body-pose" class="option-full-width">Steps to skip(Base): <output id="baseskipstepbodypose">100</output></label>
                                 <input
                                     class="option-full-width"
-                                    id="base-skip-steps-doodle"
+                                    id="base-skip-steps-body-pose"
                                     type="range"
                                     min="1"
                                     max="1000"
                                     value="100"
                                     class="slider"
-                                    oninput="baseskipstepoutdoodle.value=this.value">
+                                    oninput="baseskipstepoutbodypose.value=this.value">
                             </div>
-
+                            <hr>
                             <div class="sampling-option">
-                                <label for="upsample-doodle"> Upsample Image (Max Res: 256px)</label>
                                 <input
-                                    id="upsample-doodle"
+                                    id="upsample-body-pose"
                                     type="checkbox"
-                                    name="upsample-doodle"
-                                    value="upsample-doodle"
-                                    onclick="toggle_sr_skip_steps('doodle')">
+                                    name="upsample-body-pose"
+                                    value="upsample-body-pose"
+                                    onclick="toggle_sr_skip_steps('body-pose')">
+                                <label for="upsample-body-pose"> Upsample Image (Max Res: 256px)</label>
                             </div>
-
                             <div class="sampling-option">
-                                <label for="sr-skip-steps-doodle" class="option-full-width">Steps to skip(Super Resolution): <output id="srskipstepoutdoodle">100</output></label>
+                                <label for="sr-skip-steps-body-pose" class="option-full-width">Steps to skip(Super Resolution): <output id="srskipstepoutbodypose">100</output></label>
                                 <input
                                     class="option-full-width"
-                                    id="sr-skip-steps-doodle"
+                                    id="sr-skip-steps-body-pose"
                                     type="range"
                                     min="1"
                                     max="1000"
                                     value="100"
                                     class="slider"
-                                    oninput="srskipstepoutdoodle.value=this.value"
+                                    oninput="srskipstepoutbodypose.value=this.value"
                                     disabled>
                             </div>
                         </fieldset>
@@ -119,11 +119,11 @@
         
             <div class="interface-outputs">
                 <div class="interface-body">
-                    <img id="generated-img-doodle" src="{{ url_for('static', filename='media/placeholder/placeholder_512x512.png') }}", alt="Generated/Placeholder Image"/>
+                    <img id="generated-img-body-pose" src="{{ url_for('static', filename='media/placeholder/placeholder_512x512.png') }}", alt="Generated/Placeholder Image"/>
                 </div>
                 <div class="output-controls">
-                    <input id="save-btn" type="button" value="Save" onclick="save_generated_image('doodle')">
-                    <input id="clear-btn" type="button" value="Clear" onclick="clear_generated_image('doodle')">
+                    <input type="button" value="Save" onclick="save_generated_image('body-pose')">
+                    <input type="button" value="Clear" onclick="clear_generated_image('body-pose')">
                 </div>
             </div>
         </div>
@@ -134,45 +134,13 @@
         <div class="interface-content">
             <div class="interface-inputs">
                 <div class="interface-body">
-                    <form action="{{ url_for('interface.generate_myface') }}" method="POST" class="interface-form" id="face-form">
-                        <fieldset class="face-fieldset">
+                    <form action="{{ url_for('interface.generate_myface') }}" method="POST" class="interface-form" id="my-face-form">
+                        <fieldset class="input-fieldset">
                             <legend>Face Controllers</legend>
-
-                            <div class="controller-option">
-                                <input
-                                    id="left-eye-open-face"
-                                    type="checkbox"
-                                    name="left-eye-open-face"
-                                    value="left-eye-open-face">
-                                <label for="left-eye-open-face"> Left Eye Open</label>
-                            </div>
-
-                            <div class="controller-option">
-                                <input
-                                    id="right-eye-open-face"
-                                    type="checkbox"
-                                    name="right-eye-open-face"
-                                    value="right-eye-open-face">
-                                <label for="right-eye-open-face"> Right Eye Open</label>
-                            </div>
-
-                            <div class="controller-option">
-                                <input
-                                    id="mouth-open-face"
-                                    type="checkbox"
-                                    name="mouth-open-face"
-                                    value="mouth-open-face">
-                                <label for="mouth-open-face"> Mouth Open</label>
-                            </div>
-
-                            <div class="controller-option">
-                                <input
-                                    id="show-teeth-face"
-                                    type="checkbox"
-                                    name="show-teeth-face"
-                                    value="show-teeth-face">
-                                <label for="show-teeth-face"> Show Teeth</label>
-                            </div>
+                            {{ input_checkbox("left-eye-open-face", "Left Eye Open") }}
+                            {{ input_checkbox("right-eye-open-face", "Right Eye Open") }}
+                            {{ input_checkbox("mouth-slightly-open-face", "Mouth Slightly Open") }}
+                            {{ input_checkbox("show-teeth-face", "Show Teeth") }}
                         </fieldset>
 
                         <fieldset class="controls-fieldset">
@@ -212,6 +180,7 @@
                                     disabled
                                     required>
                             </div>
+                            <hr>
 
                             <div class="sampling-option">
                                 <label for="sampling-alg-face" class="option-full-width">Sampling Algorithm:</label>
@@ -233,7 +202,7 @@
                                     class="slider"
                                     oninput="baseskipstepoutface.value=this.value">
                             </div>
-
+                            <hr>
                             <div class="sampling-option">
                                 <label for="upsample-face"> Upsample Image (Max Res: 256px)</label>
                                 <input
@@ -280,218 +249,71 @@
             <div class="interface-inputs">
                 <div class="interface-body">
                     <form action="{{ url_for('interface.generate_celeb_faces') }}" method="POST" class="interface-form" id="celeb-face-form">
-                        <fieldset class="face-fieldset">
+                        <fieldset class="input-fieldset">
                             <legend>Celeb Face Controllers</legend>
                             
                             <!-- Bald -->
-                            <div class="controller-option">
-                                <input
-                                    id="bald-celeb-face"
-                                    type="checkbox"
-                                    name="bald-celeb-face"
-                                    value="bald-celeb-face">
-                                <label for="bald-celeb-face"> Bald</label>
-                            </div>
-
+                            {{ input_checkbox("bald-celeb-face", "Bald") }}
+                            
                             <!-- Black Hair -->
-                            <div class="controller-option">
-                                <input
-                                    id="black-hair-celeb-face"
-                                    type="checkbox"
-                                    name="black-hair-celeb-face"
-                                    value="black-hair-celeb-face">
-                                <label for="black-hair-celeb-face"> Black Hair</label>
-                            </div>
+                            {{ input_checkbox("black-hair-celeb-face", "Black Hair") }}
 
                             <!-- Blond Hair -->
-                            <div class="controller-option">
-                                <input
-                                    id="blond-hair-celeb-face"
-                                    type="checkbox"
-                                    name="blond-hair-celeb-face"
-                                    value="blond-hair-celeb-face">
-                                <label for="blond-hair-celeb-face"> Blond Hair</label>
-                            </div>
+                            {{ input_checkbox("blond-hair-celeb-face", "Blond Hair") }}
 
                             <!-- Brown Hair -->
-                            <div class="controller-option">
-                                <input
-                                    id="brown-hair-celeb-face"
-                                    type="checkbox"
-                                    name="brown-hair-celeb-face"
-                                    value="brown-hair-celeb-face">
-                                <label for="brown-hair-celeb-face"> Brown Hair</label>
-                            </div>
-
+                            {{ input_checkbox("brown-hair-celeb-face", "Brown Hair") }}
+                            
                             <!-- Bushy Eyebrow -->
-                            <div class="controller-option">
-                                <input
-                                    id="bushy-eyebrow-celeb-face"
-                                    type="checkbox"
-                                    name="bushy-eyebrow-celeb-face"
-                                    value="bushy-eyebrow-celeb-face">
-                                <label for="bushy-eyebrow-celeb-face"> Bushy Eyebrow</label>
-                            </div>
-
+                            {{ input_checkbox("bushy-eyebrow-celeb-face", "Bushy Eyebrow") }}
+                            
                             <!-- Eyeglasses -->
-                            <div class="controller-option">
-                                <input
-                                    id="eyeglasses-celeb-face"
-                                    type="checkbox"
-                                    name="eyeglasses-celeb-face"
-                                    value="eyeglasses-celeb-face">
-                                <label for="eyeglasses-celeb-face"> Eyeglasses</label>
-                            </div>
-
+                            {{ input_checkbox("eyeglasses-celeb-face", "Eyeglasses") }}
+                            
                             <!-- Goatee -->
-                            <div class="controller-option">
-                                <input
-                                    id="goatee-celeb-face"
-                                    type="checkbox"
-                                    name="goatee-celeb-face"
-                                    value="goatee-celeb-face">
-                                <label for="goatee-celeb-face"> Goatee</label>
-                            </div>
-
+                            {{ input_checkbox("goatee-celeb-face", "Goatee") }}
+                            
                             <!-- Gray Hair -->
-                            <div class="controller-option">
-                                <input
-                                    id="gray-hair-celeb-face"
-                                    type="checkbox"
-                                    name="gray-hair-celeb-face"
-                                    value="gray-hair-celeb-face">
-                                <label for="gray-hair-celeb-face"> Gray Hair</label>
-                            </div>
-
+                            {{ input_checkbox("gray-hair-celeb-face", "Gray Hair") }}
+                            
                             <!-- Male -->
-                            <div class="controller-option">
-                                <input
-                                    id="male-celeb-face"
-                                    type="checkbox"
-                                    name="male-celeb-face"
-                                    value="male-celeb-face">
-                                <label for="male-celeb-face"> Male</label>
-                            </div>
-
+                            {{ input_checkbox("male-celeb-face", "Male") }}
+                            
                             <!-- Mouth_Slightly_Open -->
-                            <div class="controller-option">
-                                <input
-                                    id="mouth-open-celeb-face"
-                                    type="checkbox"
-                                    name="mouth-open-celeb-face"
-                                    value="mouth-open-celeb-face">
-                                <label for="mouth-open-celeb-face"> Mouth Slightly Open</label>
-                            </div>
-
+                            {{ input_checkbox("mouth-open-celeb-face", "Mouth Slightly Open") }}
+                            
                             <!-- Mustache -->
-                            <div class="controller-option">
-                                <input
-                                    id="mustache-celeb-face"
-                                    type="checkbox"
-                                    name="mustache-celeb-face"
-                                    value="mustache-celeb-face">
-                                <label for="mustache-celeb-face"> Mustache</label>
-                            </div>
+                            {{ input_checkbox("mustache-celeb-face", "Mustache") }}
 
                             <!-- No_Beard -->
-                            <div class="controller-option">
-                                <input
-                                    id="no-beard-celeb-face"
-                                    type="checkbox"
-                                    name="no-beard-celeb-face"
-                                    value="no-beard-celeb-face">
-                                <label for="no-beard-celeb-face"> No Beard</label>
-                            </div>
+                            {{ input_checkbox("no-beard-celeb-face", "No Beard") }}
 
                             <!-- Sideburns -->
-                            <div class="controller-option">
-                                <input
-                                    id="sideburns-celeb-face"
-                                    type="checkbox"
-                                    name="sideburns-celeb-face"
-                                    value="sideburns-celeb-face">
-                                <label for="sideburns-celeb-face"> Sideburns</label>
-                            </div>
+                            {{ input_checkbox("sideburns-celeb-face", "Sideburns") }}
 
                             <!-- Smiling -->
-                            <div class="controller-option">
-                                <input
-                                    id="smiling-celeb-face"
-                                    type="checkbox"
-                                    name="smiling-celeb-face"
-                                    value="smiling-celeb-face">
-                                <label for="smiling-celeb-face"> Smiling</label>
-                            </div>
+                            {{ input_checkbox("smiling-celeb-face", "Smiling") }}
 
                             <!-- Straight_Hair -->
-                            <div class="controller-option">
-                                <input
-                                    id="straight-hair-celeb-face"
-                                    type="checkbox"
-                                    name="straight-hair-celeb-face"
-                                    value="straight-hair-celeb-face">
-                                <label for="straight-hair-celeb-face"> Straight Hair</label>
-                            </div>
-
+                            {{ input_checkbox("straight-hair-celeb-face", "Straight Hair") }}
+                            
                             <!-- Wavy_Hair -->
-                            <div class="controller-option">
-                                <input
-                                    id="wavy-hair-celeb-face"
-                                    type="checkbox"
-                                    name="wavy-hair-celeb-face"
-                                    value="wavy-hair-celeb-face">
-                                <label for="wavy-hair-celeb-face"> Wavy Hair</label>
-                            </div>
-
+                            {{ input_checkbox("wavy-hair-celeb-face", "Wavy Hair") }}
+                            
                             <!-- Wearing_Earrings -->
-                            <div class="controller-option">
-                                <input
-                                    id="wearing-earrings-celeb-face"
-                                    type="checkbox"
-                                    name="wearing-earrings-celeb-face"
-                                    value="wearing-earrings-celeb-face">
-                                <label for="wearing-earrings-celeb-face"> Wearing Earrings</label>
-                            </div>
+                            {{ input_checkbox("wearing-earrings-celeb-face", "Wearing Earrings") }}
 
                             <!-- Wearing_Hat -->
-                            <div class="controller-option">
-                                <input
-                                    id="wearing-hat-celeb-face"
-                                    type="checkbox"
-                                    name="wearing-hat-celeb-face"
-                                    value="wearing-hat-celeb-face">
-                                <label for="wearing-hat-celeb-face"> Wearing Hat</label>
-                            </div>
+                            {{ input_checkbox("wearing-hat-celeb-face", "Wearing Hat") }}
 
                             <!-- Wearing_Lipstick -->
-                            <div class="controller-option">
-                                <input
-                                    id="wearing-lipstick-celeb-face"
-                                    type="checkbox"
-                                    name="wearing-lipstick-celeb-face"
-                                    value="wearing-lipstick-celeb-face">
-                                <label for="wearing-lipstick-celeb-face"> Wearing Lipstick</label>
-                            </div>
-
+                            {{ input_checkbox("wearing-lipstick-celeb-face", "Wearing Lipstick") }}
+                            
                             <!-- Wearing_Necklace -->
-                            <div class="controller-option">
-                                <input
-                                    id="wearing-necklace-celeb-face"
-                                    type="checkbox"
-                                    name="wearing-necklace-celeb-face"
-                                    value="wearing-necklace-celeb-face">
-                                <label for="wearing-necklace-celeb-face"> Wearing Necklace</label>
-                            </div>
+                            {{ input_checkbox("wearing-necklace-celeb-face", "Wearing Necklace") }}
 
                             <!-- Wearing_Necktie -->
-                            <div class="controller-option">
-                                <input
-                                    id="wearing-necktie-celeb-face"
-                                    type="checkbox"
-                                    name="wearing-necktie-celeb-face"
-                                    value="wearing-necktie-celeb-face">
-                                <label for="wearing-necktie-celeb-face"> Wearing Necktie</label>
-                            </div>
+                            {{ input_checkbox("wearing-necktie-celeb-face", "Wearing Necktie") }}
                         </fieldset>
                         
                         <fieldset class="controls-fieldset">
@@ -531,6 +353,7 @@
                                     disabled
                                     required>
                             </div>
+                            <hr>
 
                             <div class="sampling-option">
                                 <label for="sampling-alg-celeb-face" class="option-full-width">Sampling Algorithm:</label>
@@ -575,7 +398,7 @@
             <div class="interface-inputs">
                 <div class="interface-body">
                     <form action="{{ url_for('interface.generate_anime_portraits') }}" method="POST" class="interface-form" id="anime-portraits-form">
-                        <fieldset class="anime-portraits-fieldset">
+                        <fieldset id="anime-portraits-fieldset" class="input-fieldset">
                             <legend>Anime Portraits Controllers</legend>
                             {% for i in range(75) %}
                             <div class="controller-option">
@@ -614,7 +437,7 @@
                             </div>
 
                             <div class="sampling-option">
-                                <label for="seed-val" class="option-full-width">Seed:</label>
+                                <label for="seed-val-anime-portraits" class="option-full-width">Seed:</label>
                                 <input
                                     class="option-full-width"
                                     id="seed-val-anime-portraits"
@@ -627,7 +450,7 @@
                                     disabled
                                     required>
                             </div>
-
+                            <hr>
                             <div class="sampling-option">
                                 <label for="sampling-alg-anime-portraits" class="option-full-width">Sampling Algorithm:</label>
                                 <select name="sampling-alg-anime-portraits" class="option-full-width" id="sampling-alg-anime-portraits" onchange="toggle_base_skip_steps('anime-portraits')">
@@ -646,7 +469,31 @@
                                     max="1000"
                                     value="100"
                                     class="slider"
-                                    oninput="baseskipstepoutanime.value=this.value">
+                                    oninput="baseskipstepanime.value=this.value">
+                            </div>
+                            <hr>
+
+                            <div class="sampling-option">
+                                <input
+                                    id="upsample-anime-portraits"
+                                    type="checkbox"
+                                    name="upsample-anime-portraits"
+                                    value="upsample-anime-portraits"
+                                    onclick="toggle_sr_skip_steps('anime-portraits')">
+                                <label for="upsample-anime-portraits"> Upsample Image (Max Res: 256px)</label>
+                            </div>
+                            <div class="sampling-option">
+                                <label for="sr-skip-steps-anime-portraits" class="option-full-width">Steps to skip(Super Resolution): <output id="srskipstepoutanimeportraits">100</output></label>
+                                <input
+                                    class="option-full-width"
+                                    id="sr-skip-steps-anime-portraits"
+                                    type="range"
+                                    min="1"
+                                    max="1000"
+                                    value="100"
+                                    class="slider"
+                                    oninput="srskipstepoutanimeportraits.value=this.value"
+                                    disabled>
                             </div>
                         </fieldset>
                     </form>
@@ -664,7 +511,6 @@
             </div>
         </div>
     </div>
-
 </div>
 {% endblock %}
 
@@ -738,51 +584,51 @@
 
         // Creates paint-canvas and adds it to the screen.
         const [canvas, context, background] = create_canvas(
-            canvas_id="paint-canvas",
-            clear_btn_id="reset-btn",
+            canvas_id="body-pose-canvas-editor",
+            clear_btn_id="body-pose-canvas-reset",
             image_url="{{ url_for('static', filename='media/placeholder/Inital_doodle.jpg') }}",
             stroke_line_width=20,
             stoke_style="black",
             linecap="round",
             linejoin="round");
         
-        const doodle_controls = document.getElementById("body-pose-form");
-        doodle_controls.addEventListener('submit', async (e) => {
+        const body_pose_controls = document.getElementById("body-pose-form");
+        body_pose_controls.addEventListener('submit', async (e) => {
             // Prevent the default form submit
             e.preventDefault();
 
             /* Gets Canvas Image*/
-            const canvas = document.getElementById("paint-canvas");
+            const canvas = document.getElementById("body-pose-canvas-editor");
             let imageBlob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
 
             // Get Seed Value.
-            const use_specific_seed_elem = document.getElementById("use-specific-seed-doodle");
+            const use_specific_seed_elem = document.getElementById("use-specific-seed-body-pose");
             if (use_specific_seed_elem.checked) {
-                const seed_elem = document.getElementById("seed-val-doodle");
+                const seed_elem = document.getElementById("seed-val-body-pose");
                 seed_value = seed_elem.value;
             } else {
                 seed_value = "";
             }
 
             // Get Sampling Algorithm.
-            const sampling_alg_elem = document.getElementById("sampling-alg-doodle");
+            const sampling_alg_elem = document.getElementById("sampling-alg-body-pose");
             sampling_alg_value = sampling_alg_elem.value;
 
             // Get Steps to skip (Low Resolution).
             if (sampling_alg_value == "ddim") {
-                var base_skip_steps_elem = document.getElementById("base-skip-steps-doodle");
+                var base_skip_steps_elem = document.getElementById("base-skip-steps-body-pose");
                 var base_skip_steps_value = base_skip_steps_elem.value;
             } else {
                 base_skip_steps_value = "";
             }
 
             // Get Upsample Boolean.
-            const upsample_elem = document.getElementById("upsample-doodle");
+            const upsample_elem = document.getElementById("upsample-body-pose");
             upsample_value = upsample_elem.checked;
 
             // Get Steps to skip (Super Resolution).
             if (upsample_value) {
-                var sr_skip_steps_elem = document.getElementById("sr-skip-steps-doodle");
+                var sr_skip_steps_elem = document.getElementById("sr-skip-steps-body-pose");
                 var sr_skip_steps_value = sr_skip_steps_elem.value;
             } else {
                 var sr_skip_steps_value = "";
@@ -809,11 +655,11 @@
             let result = await response.json();
             if (result["status"] === 200) {
                 image_b64 = result["image"];
-                show_generated_image(image_b64, "doodle");
+                show_generated_image(image_b64, "body-pose");
             }
         });
 
-        const myface_controls = document.getElementById("face-form");
+        const myface_controls = document.getElementById("my-face-form");
         myface_controls.addEventListener('submit', async (e) => {
             // Prevent the default form submit
             e.preventDefault();
@@ -825,7 +671,7 @@
             const right_eye_elem = document.getElementById("right-eye-open-face");
             const right_eye_value = right_eye_elem.checked;
             
-            const mouth_elem = document.getElementById("mouth-open-face");
+            const mouth_elem = document.getElementById("mouth-slightly-open-face");
             const mouth_value = mouth_elem.checked;
             
             const showing_teeth_elem = document.getElementById("show-teeth-face");
@@ -983,7 +829,6 @@
                 base_skip_steps_value = "";
             }
 
-
             let formData = new FormData();
             formData.append("bald", bald_value);
             formData.append("black_hair", black_hair_value);
@@ -1057,11 +902,25 @@
                 base_skip_steps_value = "";
             }
 
+            // Get Upsample Boolean.
+            const upsample_elem = document.getElementById("upsample-anime-portraits");
+            upsample_value = upsample_elem.checked;
+
+            // Get Steps to skip (Super Resolution).
+            if (upsample_value) {
+                var sr_skip_steps_elem = document.getElementById("sr-skip-steps-anime-portraits");
+                var sr_skip_steps_value = sr_skip_steps_elem.value;
+            } else {
+                var sr_skip_steps_value = "";
+            }
+
             let formData = new FormData();
             formData.append("centroids_index", centroids_index);
             formData.append("seed", seed_value);
             formData.append("sample_alg", sampling_alg_value);
             formData.append("base_skip_step", base_skip_steps_value);
+            formData.append("upsample", upsample_value);
+            formData.append("sr_skip_step", sr_skip_steps_value);
 
             const form = e.target;
             let response = await fetch(
@@ -1081,4 +940,5 @@
         });
     });
 </script>
+
 {% endblock %}

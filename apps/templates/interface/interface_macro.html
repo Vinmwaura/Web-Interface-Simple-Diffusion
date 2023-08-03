@@ -1,0 +1,10 @@
+{% macro input_checkbox(input_name, label) %}
+<div class="controller-option">
+    <input
+        type="checkbox"
+        id="{{input_name}}"
+        name="{{input_name}}"
+        value="{{input_name}}">
+    <label for="{{input_name}}"> {{label}}</label>
+</div>
+{% endmacro %}

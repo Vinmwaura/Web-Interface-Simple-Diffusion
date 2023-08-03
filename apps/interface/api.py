@@ -399,6 +399,16 @@ def generate_anime_portraits():
     base_skip_step = request.form.get("base_skip_step", 100)
     if not base_skip_step:
         base_skip_step = None
+    
+    upsample = request.form.get("upsample", False)
+    if upsample == "false":
+        upsample = False
+    else:
+        upsample = True
+
+    sr_skip_step = request.form.get("sr_skip_step", 100)
+    if not sr_skip_step:
+        sr_skip_step = None
 
     try:
         commands = ["--model_path", current_app.config["ANIMEPORTRAITS_BASE_PATH"]]
@@ -420,6 +430,23 @@ def generate_anime_portraits():
         commands.extend(centroids_labels)
 
         img = generate_base_diffusion(commands=commands)
+
+        if upsample:
+            upsample_commands = ["--model_path", current_app.config["ANIMEPORTRAITS_SR_PATH"]]
+
+            upsample_commands.append("--device")
+            upsample_commands.append(current_app.config["DEVICE"])
+
+            upsample_commands.append("--cold_step_size")
+            upsample_commands.append(sr_skip_step)
+
+            upsample_commands.append("--label")
+            upsample_commands.extend(centroids_labels)
+
+            img = generate_sr_diffusion(
+                lr_image=img,
+                commands=upsample_commands)
+
     except Exception as e:
         print(f"An error occured generating image: {e}")
         data_dict = {

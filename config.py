@@ -13,3 +13,4 @@ class Config:
     MYFACE_SR_PATH = os.environ.get("MYFACE_SR_PATH", "./models/myface_sr.json")
     CELEBFACE_BASE_PATH = os.environ.get("CELEBFACE_BASE_PATH", "./models/celebface_base.json")
     ANIMEPORTRAITS_BASE_PATH = os.environ.get("ANIMEPORTRAIT_BASE_PATH", "./models/animeportraits_base.json")
+    ANIMEPORTRAITS_SR_PATH = os.environ.get("ANIMEPORTRAIT_SR_PATH", "./models/animeportraits_sr.json")

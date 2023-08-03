@@ -1,6 +1,20 @@
+/*
+    Interface Page styling.
+*/
+
+/* Medium devices (landscape tablets, 1200px and down) */
+@media only screen and (max-width: 1200px) {
+    .interface {
+        width: fit-content;
+    }
+
+    .interface-content {
+        flex-direction: column;
+    }
+}
+
 .interface {
-    padding: 10px;
-    min-width: 600px;
+    margin: 0 auto;
 }
 
 .interface-content {
@@ -8,66 +22,43 @@
     justify-content: space-evenly;
 }
 
-/* Medium devices (landscape tablets, 1200px and up) */
-@media only screen and (min-width: 1200px) {
-    .interface-content {
-        min-height: 720px;
-        flex-direction: row;
-    }
-
-    .interface-inputs {
-        width: 600px;
-        height: inherit;
-    }
-    
-    .interface-outputs {
-        width: 600px;
-        height: 600px;
-    }
-
-    .interface-outputs .interface-body {
-        overflow: auto;
-    }
+.generate-btn {
+    background-color: green;
+    color: white;
 }
 
-/* Medium devices (landscape tablets, 1200px and below) */
-@media only screen and (max-width: 1200px) {
-    .interface-content {
-        flex-direction: column;
-    }
-
-    .interface-outputs {
-        margin-top: 10px;
-    }
+.interface {
+    padding: 10px;
 }
 
-.interface-outputs > .interface-body {
+.interface-outputs {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    justify-content: space-around;
     align-items: center;
+    height: 600px;
+    width: 600px;
 }
 
-.interface-body {
-    height: 100%;
+fieldset {
+    margin: 0;
 }
 
-.interface-body canvas {
-    display: block;
-    margin: auto;
+.input-fieldset {
+    width: 600px;
+    max-height: 600px;
+    overflow-y: auto;
 }
 
-#paint-canvas {
-    cursor:crosshair;
-    outline: solid 1px;
-    border-radius: 5px;
-}
-
-.controls-fieldset span {
-    margin: 10px 0;
+.canvas-reset-btn, .generate-btn {
+    width: 100px;
+    height: 30px;
+    border-radius: 30px;
+    color: white;
 }
 
 .sampling-option, .controller-option {
-    margin: 10px 0;
+    padding: 10px 0;
 }
 
 .option-full-width {
@@ -75,66 +66,52 @@
     width: 100%;
 }
 
-.output-controls {
+.output-controls input[type="button"] {
+    width: 100px;
+    height: 40px;
+    border-radius: 30px;
+    margin: 10px;
+}
+
+/*
+    Body Pose Tab
+*/
+.canvas-reset-btn {
+    background-color: red;
+}
+
+.body-pose-canvas {
+    cursor:crosshair;
+    outline: solid 1px;
+    border-radius: 5px;
+}
+
+#canvas-fieldset {
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
-.output-controls input[type="button"] {
-    width: 100px;
-    height: 50px;
-    border-radius: 30px;
-    margin: 10px;
-}
-
-.controls-fieldset input[type="button"], .controls-fieldset input[type="submit"] {
-    width: 100px;
-    height: 30px;
-    border-radius: 30px;
-    color: white;
-}
-
-.generate-btn {
-    background-color: green;
-}
-
-#reset-btn {
-    background-color: red;
-}
-
-.controls-fieldset input {
-    margin: 5px 0;
-}
-
-/* HIDE RADIO */
-[type=radio] { 
+/*
+    Image Grid Selector
+*/
+#anime-portraits-fieldset [type=radio] { 
     position: absolute;
     opacity: 0;
     width: 0;
     height: 0;
-  }
-  
-  /* IMAGE STYLES */
-  [type=radio] + img {
-    cursor: pointer;
-  }
-  
-  /* CHECKED STYLES */
-  [type=radio]:checked + img {
-    outline: 2px solid #f00;
-  }
+}
 
-.anime-portraits-fieldset {
+#anime-portraits-fieldset [type=radio] + img {
+    cursor: pointer;
+}
+
+#anime-portraits-fieldset [type=radio]:checked + img {
+    outline: 5px solid #f00;
+}
+
+#anime-portraits-fieldset {
     display: grid;
     grid-template-columns: auto auto auto;
-}
-
-.anime-portraits-fieldset > .controller-option {
-    margin: auto;
-}
-
-fieldset {
-    max-height: 600px;
-    overflow: auto;
+    justify-content: space-evenly;
 }
