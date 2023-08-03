@@ -12,7 +12,6 @@ function create_canvas(
     // Canvas functionality.
     var canvas = document.getElementById(canvas_id);
     var context = canvas.getContext("2d");
-    var boundings = canvas.getBoundingClientRect();
     
     // Background Image in cavas
     var background;
@@ -40,8 +39,11 @@ function create_canvas(
 
     // Handle Mouse Coordinates.
     function setMouseCoordinates(event) {
-        mouseX = event.clientX - boundings.left;
-        mouseY = event.clientY - boundings.top;
+        // boundings = Mouse click event.
+        boundings = event.target.getBoundingClientRect();
+        
+        mouseX = event.clientX - boundings.left; //x position within the element.
+        mouseY = event.clientY - boundings.top;  //y position within the element.
     }
 
     // Specifications.
