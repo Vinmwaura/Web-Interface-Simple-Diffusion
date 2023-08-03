@@ -13,8 +13,8 @@ from apps.interface.utils import convert_tensor_to_numpy
 def generate_base_diffusion(commands, cond_img=None, log=print):
     if cond_img is not None:
         img_dim = (
-            int(current_app.config["DOODLE_IMG_DIM"]),
-            int(current_app.config["DOODLE_IMG_DIM"]))
+            int(current_app.config["BODY_POSE_IMG_DIM"]),
+            int(current_app.config["BODY_POSE_IMG_DIM"]))
         cond_img = cv2.resize(
             cond_img,
             img_dim,

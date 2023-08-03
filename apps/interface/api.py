@@ -53,7 +53,7 @@ def generate_body_poses():
         sr_skip_step = None
     
     try:
-        commands = ["--model_path", current_app.config["DOODLE_BASE_PATH"]]
+        commands = ["--model_path", current_app.config["BODY_POSE_BASE_PATH"]]
     
         commands.append("--device")
         commands.append(current_app.config["DEVICE"])
@@ -73,7 +73,7 @@ def generate_body_poses():
             commands=commands)
 
         if upsample:
-            upsample_commands = ["--model_path", current_app.config["DOODLE_SR_PATH"]]
+            upsample_commands = ["--model_path", current_app.config["BODY_POSE_SR_PATH"]]
 
             upsample_commands.append("--device")
             upsample_commands.append(current_app.config["DEVICE"])
