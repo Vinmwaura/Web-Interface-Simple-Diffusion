@@ -577,6 +577,398 @@
         }
     }
 
+    function disable_generate_btn() {
+        // Disable Generate Button.
+        var generate_elem = document.getElementsByClassName("generate-btn");
+        for(elem of generate_elem) {
+            elem.setAttribute("disabled", "disabled");
+            elem.value = "Generating...";
+        }
+    }
+
+    function enable_generate_btn() {
+        // Disable Generate Button.
+        var generate_elem = document.getElementsByClassName("generate-btn");
+        for(elem of generate_elem) {
+            elem.removeAttribute("disabled");
+            elem.value = "Generate";
+        }
+    }
+
+    async function generate_body_pose_image(e) {
+        // Gets Canvas Image
+        const canvas = document.getElementById("body-pose-canvas-editor");
+        let imageBlob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+
+        // Get Seed Value.
+        const use_specific_seed_elem = document.getElementById("use-specific-seed-body-pose");
+        if (use_specific_seed_elem.checked) {
+            const seed_elem = document.getElementById("seed-val-body-pose");
+            seed_value = seed_elem.value;
+        } else {
+            seed_value = "";
+        }
+
+        // Get Sampling Algorithm.
+        const sampling_alg_elem = document.getElementById("sampling-alg-body-pose");
+        sampling_alg_value = sampling_alg_elem.value;
+
+        // Get Steps to skip (Low Resolution).
+        if (sampling_alg_value == "ddim") {
+            var base_skip_steps_elem = document.getElementById("base-skip-steps-body-pose");
+            var base_skip_steps_value = base_skip_steps_elem.value;
+        } else {
+            base_skip_steps_value = "";
+        }
+
+        // Get Upsample Boolean.
+        const upsample_elem = document.getElementById("upsample-body-pose");
+        upsample_value = upsample_elem.checked;
+
+        // Get Steps to skip (Super Resolution).
+        if (upsample_value) {
+            var sr_skip_steps_elem = document.getElementById("sr-skip-steps-body-pose");
+            var sr_skip_steps_value = sr_skip_steps_elem.value;
+        } else {
+            var sr_skip_steps_value = "";
+        }
+
+        let formData = new FormData();
+        formData.append("canvas_image", imageBlob, "image.png");
+        formData.append("seed", seed_value);
+        formData.append("sample_alg", sampling_alg_value);
+        formData.append("base_skip_step", base_skip_steps_value);
+        formData.append("upsample", upsample_value);
+        formData.append("sr_skip_step", sr_skip_steps_value);
+        
+        // Disable Generate Button.
+        disable_generate_btn();
+
+        const form = e.target;
+        try {
+            let response = await fetch(
+                form.action, {
+                    headers: {
+                        "contenttype": "multipart/form-data",
+                    },
+                    method: "POST",
+                    body: formData
+                }
+            );
+            let result = await response.json();
+            if (result["status"] === 200) {
+                image_b64 = result["image"];
+                show_generated_image(image_b64, "body-pose");
+            }
+        } catch (error) {
+            // TypeError: Failed to fetch
+            alert("An error occured generating image, please try again!");
+        } finally {
+            enable_generate_btn();
+        }
+    }
+
+    async function generate_my_face_image(e) {
+        /* Get Input controls */
+        const left_eye_elem = document.getElementById("left-eye-open-face");
+        const left_eye_value = left_eye_elem.checked;
+        
+        const right_eye_elem = document.getElementById("right-eye-open-face");
+        const right_eye_value = right_eye_elem.checked;
+        
+        const mouth_elem = document.getElementById("mouth-slightly-open-face");
+        const mouth_value = mouth_elem.checked;
+        
+        const showing_teeth_elem = document.getElementById("show-teeth-face");
+        const showing_teeth_value = showing_teeth_elem.checked;
+        
+        // Get Seed Value.
+        const use_specific_seed_elem = document.getElementById("use-specific-seed-face");
+        if (use_specific_seed_elem.checked) {
+            const seed_elem = document.getElementById("seed-val-face");
+            seed_value = seed_elem.value;
+        } else {
+            seed_value = "";
+        }
+
+        // Get Sampling Algorithm.
+        const sampling_alg_elem = document.getElementById("sampling-alg-face");
+        const sampling_alg_value = sampling_alg_elem.value;
+
+        // Get Steps to skip (Low Resolution).
+        if (sampling_alg_value == "ddim") {
+            const base_skip_steps_elem = document.getElementById("base-skip-steps-face");
+            base_skip_steps_value = base_skip_steps_elem.value;
+        } else {
+            base_skip_steps_value = "";
+        }
+
+        // Get Upsample Boolean.
+        const upsample_elem = document.getElementById("upsample-face");
+        const upsample_value = upsample_elem.checked;
+
+        // Get Steps to skip (Super Resolution).
+        if (upsample_value) {
+            const sr_skip_steps_elem = document.getElementById("sr-skip-steps-face");
+            var sr_skip_steps_value = sr_skip_steps_elem.value;
+        } else {
+            var sr_skip_steps_value = "";
+        }
+
+        let formData = new FormData();
+        formData.append("left_eye", left_eye_value);
+        formData.append("right_eye", right_eye_value);
+        formData.append("mouth", mouth_value);
+        formData.append("showing_teeth", showing_teeth_value);
+        formData.append("seed", seed_value);
+        formData.append("sample_alg", sampling_alg_value);
+        formData.append("base_skip_step", base_skip_steps_value);
+        formData.append("upsample", upsample_value);
+        formData.append("sr_skip_step", sr_skip_steps_value);
+
+        disable_generate_btn();
+        
+        try {
+            const form = e.target;
+            let response = await fetch(
+                form.action, {
+                    headers: {
+                        "contenttype": "multipart/form-data",
+                    },
+                    method: "POST",
+                    body: formData
+                }
+            );
+
+            let result = await response.json();
+            if (result["status"] === 200) {
+                image_b64 = result["image"];
+                show_generated_image(image_b64, "face");
+            }
+        }
+        catch(err) {
+            // TypeError: Failed to fetch
+            alert("An error occured generating image, please try again!");
+        }
+        finally {
+            enable_generate_btn();
+        }
+    }
+
+    async function generate_celeb_face_image(e) {
+        /* Get Input controls */
+        const bald_elem = document.getElementById("bald-celeb-face");
+        const bald_value = bald_elem.checked;
+
+        const black_hair_elem = document.getElementById("black-hair-celeb-face");
+        const black_hair_value = black_hair_elem.checked;
+
+        const blond_elem = document.getElementById("blond-hair-celeb-face");
+        const blond_value = blond_elem.checked;
+
+        const brown_hair_elem = document.getElementById("brown-hair-celeb-face");
+        const brown_hair_value = brown_hair_elem.checked;
+
+        const bushy_eyebrow_elem = document.getElementById("bushy-eyebrow-celeb-face");
+        const bushy_eyebrow_value = bushy_eyebrow_elem.checked;
+
+        const eyeglasses_elem = document.getElementById("eyeglasses-celeb-face");
+        const eyeglasses_value = eyeglasses_elem.checked;
+
+        const goatee_elem = document.getElementById("goatee-celeb-face");
+        const goatee_value = goatee_elem.checked;
+
+        const gray_hair_elem = document.getElementById("gray-hair-celeb-face");
+        const gray_hair_value = gray_hair_elem.checked;
+
+        const male_elem = document.getElementById("male-celeb-face");
+        const male_value = male_elem.checked;
+
+        const mouth_open_elem = document.getElementById("mouth-open-celeb-face");
+        const mouth_open_value = mouth_open_elem.checked;
+
+        const mustache_elem = document.getElementById("mustache-celeb-face");
+        const mustache_value = mustache_elem.checked;
+
+        const no_beard_elem = document.getElementById("no-beard-celeb-face");
+        const no_beard_value = no_beard_elem.checked;
+
+        const sideburns_elem = document.getElementById("sideburns-celeb-face");
+        const sideburns_value = sideburns_elem.checked;
+
+        const smiling_elem = document.getElementById("smiling-celeb-face");
+        const smiling_value = smiling_elem.checked;
+
+        const straight_hair_elem = document.getElementById("straight-hair-celeb-face");
+        const straight_hair_value = straight_hair_elem.checked;
+
+        const wavy_hair_elem = document.getElementById("wavy-hair-celeb-face");
+        const wavy_hair_value = wavy_hair_elem.checked;
+
+        const wearing_earrings_elem = document.getElementById("wearing-earrings-celeb-face");
+        const wearing_earrings_value = wearing_earrings_elem.checked;
+
+        const wearing_hat_elem = document.getElementById("wearing-hat-celeb-face");
+        const wearing_hat_value = wearing_hat_elem.checked;
+
+        const wearing_lipstick_elem = document.getElementById("wearing-lipstick-celeb-face");
+        const wearing_lipstick_value = wearing_lipstick_elem.checked;
+
+        const wearing_necklace_elem = document.getElementById("wearing-necklace-celeb-face");
+        const wearing_necklace_value = wearing_necklace_elem.checked;
+
+        const wearing_necktie_elem = document.getElementById("wearing-necktie-celeb-face");
+        const wearing_necktie_value = wearing_necktie_elem.checked;
+
+        // Get Seed Value.
+        const use_specific_seed_elem = document.getElementById("use-specific-seed-celeb-face");
+        if (use_specific_seed_elem.checked) {
+            const seed_elem = document.getElementById("seed-val-celeb-face");
+            seed_value = seed_elem.value;
+        } else {
+            seed_value = "";
+        }
+
+        // Get Sampling Algorithm.
+        const sampling_alg_elem = document.getElementById("sampling-alg-celeb-face");
+        const sampling_alg_value = sampling_alg_elem.value;
+
+        // Get Steps to skip (Low Resolution).
+        if (sampling_alg_value == "ddim") {
+            const base_skip_steps_elem = document.getElementById("base-skip-steps-celeb-face");
+            base_skip_steps_value = base_skip_steps_elem.value;
+        } else {
+            base_skip_steps_value = "";
+        }
+
+        let formData = new FormData();
+        formData.append("bald", bald_value);
+        formData.append("black_hair", black_hair_value);
+        formData.append("blond_hair", blond_value);
+        formData.append("brown_hair", brown_hair_value);
+        formData.append("bushy_eyebrows", bushy_eyebrow_value);
+        formData.append("eyeglasses", eyeglasses_value);
+        formData.append("goatee", goatee_value);
+        formData.append("gray_hair", gray_hair_value);
+        formData.append("male", male_value);
+        formData.append("mouth_open", mouth_open_value);
+        formData.append("mustache", mustache_value);
+        formData.append("no_beard", no_beard_value);
+        formData.append("sideburns", sideburns_value);
+        formData.append("smiling", smiling_value);
+        formData.append("straight_hair", straight_hair_value);
+        formData.append("wavy_hair", wavy_hair_value);
+        formData.append("wearing_earrings", wearing_earrings_value);
+        formData.append("smiling", smiling_value);
+        formData.append("wearing_hat", wearing_hat_value);
+        formData.append("wearing_lipstick", wearing_lipstick_value);
+        formData.append("wearing_necklace", wearing_necklace_value);
+        formData.append("wearing_necktie", wearing_necktie_value);
+        formData.append("seed", seed_value);
+        formData.append("sample_alg", sampling_alg_value);
+        formData.append("base_skip_step", base_skip_steps_value);
+        
+        disable_generate_btn();
+        
+        try {
+            const form = e.target;
+            let response = await fetch(
+                form.action, {
+                    headers: {
+                        "contenttype": "multipart/form-data",
+                    },
+                    method: "POST",
+                    body: formData
+                }
+            );
+            let result = await response.json();
+            if (result["status"] === 200) {
+                image_b64 = result["image"];
+                show_generated_image(image_b64, "celeb-face");
+            }
+        }
+        catch(err) {
+            // TypeError: Failed to fetch
+            alert("An error occured generating image, please try again!");
+        }
+        finally {
+            enable_generate_btn();
+        }
+    }
+
+    async function generate_anime_portraits_image(e) {
+        /* Get Input controls */
+        centroids_index = document.querySelector('input[name="portraits-centroid"]:checked').value;
+
+        // Get Seed Value.
+        const use_specific_seed_elem = document.getElementById("use-specific-seed-anime-portraits");
+        if (use_specific_seed_elem.checked) {
+            const seed_elem = document.getElementById("seed-val-anime-portraits");
+            seed_value = seed_elem.value;
+        } else {
+            seed_value = "";
+        }
+
+        // Get Sampling Algorithm.
+        const sampling_alg_elem = document.getElementById("sampling-alg-anime-portraits");
+        const sampling_alg_value = sampling_alg_elem.value;
+
+        // Get Steps to skip (Low Resolution).
+        if (sampling_alg_value == "ddim") {
+            const base_skip_steps_elem = document.getElementById("base-skip-steps-anime-portraits");
+            base_skip_steps_value = base_skip_steps_elem.value;
+        } else {
+            base_skip_steps_value = "";
+        }
+
+        // Get Upsample Boolean.
+        const upsample_elem = document.getElementById("upsample-anime-portraits");
+        upsample_value = upsample_elem.checked;
+
+        // Get Steps to skip (Super Resolution).
+        if (upsample_value) {
+            var sr_skip_steps_elem = document.getElementById("sr-skip-steps-anime-portraits");
+            var sr_skip_steps_value = sr_skip_steps_elem.value;
+        } else {
+            var sr_skip_steps_value = "";
+        }
+
+        let formData = new FormData();
+        formData.append("centroids_index", centroids_index);
+        formData.append("seed", seed_value);
+        formData.append("sample_alg", sampling_alg_value);
+        formData.append("base_skip_step", base_skip_steps_value);
+        formData.append("upsample", upsample_value);
+        formData.append("sr_skip_step", sr_skip_steps_value);
+
+        disable_generate_btn();
+
+        try {
+            const form = e.target;
+            let response = await fetch(
+                form.action, {
+                    headers: {
+                        "contenttype": "multipart/form-data",
+                    },
+                    method: "POST",
+                    body: formData
+                }
+            );
+            let result = await response.json();
+            if (result["status"] === 200) {
+                image_b64 = result["image"];
+                show_generated_image(image_b64, "anime-portraits");
+            }
+        }
+        catch(err) {
+            // TypeError: Failed to fetch
+            alert("An error occured generating image, please try again!");
+        }
+        finally {
+            enable_generate_btn();
+        }
+    }
+
     // Executes when DOM is finally loaded.
     window.addEventListener("DOMContentLoaded", function() {
         // Activates first tab to load it's content onto screen.
@@ -593,350 +985,35 @@
             linejoin="round");
         
         const body_pose_controls = document.getElementById("body-pose-form");
-        body_pose_controls.addEventListener('submit', async (e) => {
+        body_pose_controls.addEventListener('submit', (e) => {
             // Prevent the default form submit
             e.preventDefault();
 
-            /* Gets Canvas Image*/
-            const canvas = document.getElementById("body-pose-canvas-editor");
-            let imageBlob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
-
-            // Get Seed Value.
-            const use_specific_seed_elem = document.getElementById("use-specific-seed-body-pose");
-            if (use_specific_seed_elem.checked) {
-                const seed_elem = document.getElementById("seed-val-body-pose");
-                seed_value = seed_elem.value;
-            } else {
-                seed_value = "";
-            }
-
-            // Get Sampling Algorithm.
-            const sampling_alg_elem = document.getElementById("sampling-alg-body-pose");
-            sampling_alg_value = sampling_alg_elem.value;
-
-            // Get Steps to skip (Low Resolution).
-            if (sampling_alg_value == "ddim") {
-                var base_skip_steps_elem = document.getElementById("base-skip-steps-body-pose");
-                var base_skip_steps_value = base_skip_steps_elem.value;
-            } else {
-                base_skip_steps_value = "";
-            }
-
-            // Get Upsample Boolean.
-            const upsample_elem = document.getElementById("upsample-body-pose");
-            upsample_value = upsample_elem.checked;
-
-            // Get Steps to skip (Super Resolution).
-            if (upsample_value) {
-                var sr_skip_steps_elem = document.getElementById("sr-skip-steps-body-pose");
-                var sr_skip_steps_value = sr_skip_steps_elem.value;
-            } else {
-                var sr_skip_steps_value = "";
-            }
-
-            let formData = new FormData();
-            formData.append("canvas_image", imageBlob, "image.png");
-            formData.append("seed", seed_value);
-            formData.append("sample_alg", sampling_alg_value);
-            formData.append("base_skip_step", base_skip_steps_value);
-            formData.append("upsample", upsample_value);
-            formData.append("sr_skip_step", sr_skip_steps_value);
-            
-            const form = e.target;
-            let response = await fetch(
-                form.action, {
-                    headers: {
-                        "contenttype": "multipart/form-data",
-                    },
-                    method: "POST",
-                    body: formData
-                }
-            );
-            let result = await response.json();
-            if (result["status"] === 200) {
-                image_b64 = result["image"];
-                show_generated_image(image_b64, "body-pose");
-            }
+            generate_body_pose_image(e);
         });
 
         const myface_controls = document.getElementById("my-face-form");
-        myface_controls.addEventListener('submit', async (e) => {
+        myface_controls.addEventListener('submit', (e) => {
             // Prevent the default form submit
             e.preventDefault();
 
-            /* Get Input controls */
-            const left_eye_elem = document.getElementById("left-eye-open-face");
-            const left_eye_value = left_eye_elem.checked;
-            
-            const right_eye_elem = document.getElementById("right-eye-open-face");
-            const right_eye_value = right_eye_elem.checked;
-            
-            const mouth_elem = document.getElementById("mouth-slightly-open-face");
-            const mouth_value = mouth_elem.checked;
-            
-            const showing_teeth_elem = document.getElementById("show-teeth-face");
-            const showing_teeth_value = showing_teeth_elem.checked;
-            
-            // Get Seed Value.
-            const use_specific_seed_elem = document.getElementById("use-specific-seed-face");
-            if (use_specific_seed_elem.checked) {
-                const seed_elem = document.getElementById("seed-val-face");
-                seed_value = seed_elem.value;
-            } else {
-                seed_value = "";
-            }
-
-            // Get Sampling Algorithm.
-            const sampling_alg_elem = document.getElementById("sampling-alg-face");
-            const sampling_alg_value = sampling_alg_elem.value;
-
-            // Get Steps to skip (Low Resolution).
-            if (sampling_alg_value == "ddim") {
-                const base_skip_steps_elem = document.getElementById("base-skip-steps-face");
-                base_skip_steps_value = base_skip_steps_elem.value;
-            } else {
-                base_skip_steps_value = "";
-            }
-
-            // Get Upsample Boolean.
-            const upsample_elem = document.getElementById("upsample-face");
-            const upsample_value = upsample_elem.checked;
-
-            // Get Steps to skip (Super Resolution).
-            if (upsample_value) {
-                const sr_skip_steps_elem = document.getElementById("sr-skip-steps-face");
-                var sr_skip_steps_value = sr_skip_steps_elem.value;
-            } else {
-                var sr_skip_steps_value = "";
-            }
-
-            let formData = new FormData();
-            formData.append("left_eye", left_eye_value);
-            formData.append("right_eye", right_eye_value);
-            formData.append("mouth", mouth_value);
-            formData.append("showing_teeth", showing_teeth_value);
-            formData.append("seed", seed_value);
-            formData.append("sample_alg", sampling_alg_value);
-            formData.append("base_skip_step", base_skip_steps_value);
-            formData.append("upsample", upsample_value);
-            formData.append("sr_skip_step", sr_skip_steps_value);
-            
-            const form = e.target;
-            let response = await fetch(
-                form.action, {
-                    headers: {
-                        "contenttype": "multipart/form-data",
-                    },
-                    method: "POST",
-                    body: formData
-                }
-            );
-            let result = await response.json();
-            if (result["status"] === 200) {
-                image_b64 = result["image"];
-                show_generated_image(image_b64, "face");
-            }
+            generate_my_face_image(e);
         });
 
         const celebface_controls = document.getElementById("celeb-face-form");
-        celebface_controls.addEventListener('submit', async (e) => {
+        celebface_controls.addEventListener('submit', (e) => {
             // Prevent the default form submit
             e.preventDefault();
 
-            /* Get Input controls */
-            const bald_elem = document.getElementById("bald-celeb-face");
-            const bald_value = bald_elem.checked;
-
-            const black_hair_elem = document.getElementById("black-hair-celeb-face");
-            const black_hair_value = black_hair_elem.checked;
-
-            const blond_elem = document.getElementById("blond-hair-celeb-face");
-            const blond_value = blond_elem.checked;
-
-            const brown_hair_elem = document.getElementById("brown-hair-celeb-face");
-            const brown_hair_value = brown_hair_elem.checked;
-
-            const bushy_eyebrow_elem = document.getElementById("bushy-eyebrow-celeb-face");
-            const bushy_eyebrow_value = bushy_eyebrow_elem.checked;
-
-            const eyeglasses_elem = document.getElementById("eyeglasses-celeb-face");
-            const eyeglasses_value = eyeglasses_elem.checked;
-
-            const goatee_elem = document.getElementById("goatee-celeb-face");
-            const goatee_value = goatee_elem.checked;
-
-            const gray_hair_elem = document.getElementById("gray-hair-celeb-face");
-            const gray_hair_value = gray_hair_elem.checked;
-
-            const male_elem = document.getElementById("male-celeb-face");
-            const male_value = male_elem.checked;
-
-            const mouth_open_elem = document.getElementById("mouth-open-celeb-face");
-            const mouth_open_value = mouth_open_elem.checked;
-
-            const mustache_elem = document.getElementById("mustache-celeb-face");
-            const mustache_value = mustache_elem.checked;
-
-            const no_beard_elem = document.getElementById("no-beard-celeb-face");
-            const no_beard_value = no_beard_elem.checked;
-
-            const sideburns_elem = document.getElementById("sideburns-celeb-face");
-            const sideburns_value = sideburns_elem.checked;
-
-            const smiling_elem = document.getElementById("smiling-celeb-face");
-            const smiling_value = smiling_elem.checked;
-
-            const straight_hair_elem = document.getElementById("straight-hair-celeb-face");
-            const straight_hair_value = straight_hair_elem.checked;
-
-            const wavy_hair_elem = document.getElementById("wavy-hair-celeb-face");
-            const wavy_hair_value = wavy_hair_elem.checked;
-
-            const wearing_earrings_elem = document.getElementById("wearing-earrings-celeb-face");
-            const wearing_earrings_value = wearing_earrings_elem.checked;
-
-            const wearing_hat_elem = document.getElementById("wearing-hat-celeb-face");
-            const wearing_hat_value = wearing_hat_elem.checked;
-
-            const wearing_lipstick_elem = document.getElementById("wearing-lipstick-celeb-face");
-            const wearing_lipstick_value = wearing_lipstick_elem.checked;
-
-            const wearing_necklace_elem = document.getElementById("wearing-necklace-celeb-face");
-            const wearing_necklace_value = wearing_necklace_elem.checked;
-
-            const wearing_necktie_elem = document.getElementById("wearing-necktie-celeb-face");
-            const wearing_necktie_value = wearing_necktie_elem.checked;
-
-
-            // Get Seed Value.
-            const use_specific_seed_elem = document.getElementById("use-specific-seed-celeb-face");
-            if (use_specific_seed_elem.checked) {
-                const seed_elem = document.getElementById("seed-val-celeb-face");
-                seed_value = seed_elem.value;
-            } else {
-                seed_value = "";
-            }
-
-            // Get Sampling Algorithm.
-            const sampling_alg_elem = document.getElementById("sampling-alg-celeb-face");
-            const sampling_alg_value = sampling_alg_elem.value;
-
-            // Get Steps to skip (Low Resolution).
-            if (sampling_alg_value == "ddim") {
-                const base_skip_steps_elem = document.getElementById("base-skip-steps-celeb-face");
-                base_skip_steps_value = base_skip_steps_elem.value;
-            } else {
-                base_skip_steps_value = "";
-            }
-
-            let formData = new FormData();
-            formData.append("bald", bald_value);
-            formData.append("black_hair", black_hair_value);
-            formData.append("blond_hair", blond_value);
-            formData.append("brown_hair", brown_hair_value);
-            formData.append("bushy_eyebrows", bushy_eyebrow_value);
-            formData.append("eyeglasses", eyeglasses_value);
-            formData.append("goatee", goatee_value);
-            formData.append("gray_hair", gray_hair_value);
-            formData.append("male", male_value);
-            formData.append("mouth_open", mouth_open_value);
-            formData.append("mustache", mustache_value);
-            formData.append("no_beard", no_beard_value);
-            formData.append("sideburns", sideburns_value);
-            formData.append("smiling", smiling_value);
-            formData.append("straight_hair", straight_hair_value);
-            formData.append("wavy_hair", wavy_hair_value);
-            formData.append("wearing_earrings", wearing_earrings_value);
-            formData.append("smiling", smiling_value);
-            formData.append("wearing_hat", wearing_hat_value);
-            formData.append("wearing_lipstick", wearing_lipstick_value);
-            formData.append("wearing_necklace", wearing_necklace_value);
-            formData.append("wearing_necktie", wearing_necktie_value);
-            formData.append("seed", seed_value);
-            formData.append("sample_alg", sampling_alg_value);
-            formData.append("base_skip_step", base_skip_steps_value);
-
-            const form = e.target;
-            let response = await fetch(
-                form.action, {
-                    headers: {
-                        "contenttype": "multipart/form-data",
-                    },
-                    method: "POST",
-                    body: formData
-                }
-            );
-            let result = await response.json();
-            if (result["status"] === 200) {
-                image_b64 = result["image"];
-                show_generated_image(image_b64, "celeb-face");
-            }
+            generate_celeb_face_image(e);
         });
 
         const animeportraits_controls = document.getElementById("anime-portraits-form");
-        animeportraits_controls.addEventListener('submit', async (e) => {
+        animeportraits_controls.addEventListener('submit', (e) => {
             // Prevent the default form submit
             e.preventDefault();
 
-            /* Get Input controls */
-            centroids_index = document.querySelector('input[name="portraits-centroid"]:checked').value;
-
-            // Get Seed Value.
-            const use_specific_seed_elem = document.getElementById("use-specific-seed-anime-portraits");
-            if (use_specific_seed_elem.checked) {
-                const seed_elem = document.getElementById("seed-val-anime-portraits");
-                seed_value = seed_elem.value;
-            } else {
-                seed_value = "";
-            }
-
-            // Get Sampling Algorithm.
-            const sampling_alg_elem = document.getElementById("sampling-alg-anime-portraits");
-            const sampling_alg_value = sampling_alg_elem.value;
-
-            // Get Steps to skip (Low Resolution).
-            if (sampling_alg_value == "ddim") {
-                const base_skip_steps_elem = document.getElementById("base-skip-steps-anime-portraits");
-                base_skip_steps_value = base_skip_steps_elem.value;
-            } else {
-                base_skip_steps_value = "";
-            }
-
-            // Get Upsample Boolean.
-            const upsample_elem = document.getElementById("upsample-anime-portraits");
-            upsample_value = upsample_elem.checked;
-
-            // Get Steps to skip (Super Resolution).
-            if (upsample_value) {
-                var sr_skip_steps_elem = document.getElementById("sr-skip-steps-anime-portraits");
-                var sr_skip_steps_value = sr_skip_steps_elem.value;
-            } else {
-                var sr_skip_steps_value = "";
-            }
-
-            let formData = new FormData();
-            formData.append("centroids_index", centroids_index);
-            formData.append("seed", seed_value);
-            formData.append("sample_alg", sampling_alg_value);
-            formData.append("base_skip_step", base_skip_steps_value);
-            formData.append("upsample", upsample_value);
-            formData.append("sr_skip_step", sr_skip_steps_value);
-
-            const form = e.target;
-            let response = await fetch(
-                form.action, {
-                    headers: {
-                        "contenttype": "multipart/form-data",
-                    },
-                    method: "POST",
-                    body: formData
-                }
-            );
-            let result = await response.json();
-            if (result["status"] === 200) {
-                image_b64 = result["image"];
-                show_generated_image(image_b64, "anime-portraits");
-            }
+            generate_anime_portraits_image(e);
         });
     });
 </script>

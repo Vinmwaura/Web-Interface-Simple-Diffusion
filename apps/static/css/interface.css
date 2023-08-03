@@ -27,6 +27,11 @@
     color: white;
 }
 
+.generate-btn:disabled {
+    background-color: dimgrey;
+    opacity: 1;
+}
+
 .interface {
     padding: 10px;
 }
@@ -115,3 +120,4 @@ fieldset {
     grid-template-columns: auto auto auto;
     justify-content: space-evenly;
 }
+
