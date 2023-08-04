@@ -1,5 +1,4 @@
 from flask import (
-    Flask,
     request,
     jsonify,
     current_app)
@@ -9,9 +8,6 @@ from apps.interface import bp
 from apps.interface.utils import (
     convert_binary_to_numpy,
     convert_numpy_to_base64)
-from apps.interface.controllers import (
-    generate_base_diffusion,
-    generate_sr_diffusion)
 
 @bp.route("/api/myposes", methods=["POST"])
 def generate_body_poses():
@@ -53,37 +49,56 @@ def generate_body_poses():
         sr_skip_step = None
     
     try:
-        commands = ["--model_path", current_app.config["BODY_POSE_BASE_PATH"]]
+        # Base Resolution Parameters.
+        br_commands = [
+            "--model_path",
+            current_app.config["BODY_POSE_BASE_PATH"]]
     
-        commands.append("--device")
-        commands.append(current_app.config["DEVICE"])
+        br_commands.append("--device")
+        br_commands.append(current_app.config["DEVICE"])
         if seed:
-            commands.append("-s")
-            commands.append(seed)
+            br_commands.append("-s")
+            br_commands.append(seed)
         if sample_alg:
-            commands.append("--diff_alg")
-            commands.append(sample_alg)
+            br_commands.append("--diff_alg")
+            br_commands.append(sample_alg)
         
         if sample_alg == "ddim":
-            commands.append("--ddim_step_size")
-            commands.append(base_skip_step)
+            br_commands.append("--ddim_step_size")
+            br_commands.append(base_skip_step)
         
-        img = generate_base_diffusion(
-            cond_img=img,
-            commands=commands)
-
         if upsample:
-            upsample_commands = ["--model_path", current_app.config["BODY_POSE_SR_PATH"]]
+            sr_commands = [
+                "--model_path",
+                current_app.config["BODY_POSE_SR_PATH"]]
 
-            upsample_commands.append("--device")
-            upsample_commands.append(current_app.config["DEVICE"])
+            sr_commands.append("--device")
+            sr_commands.append(current_app.config["DEVICE"])
 
-            upsample_commands.append("--cold_step_size")
-            upsample_commands.append(sr_skip_step)
+            sr_commands.append("--cold_step_size")
+            sr_commands.append(sr_skip_step)
+        else:
+            sr_commands = None
 
-            img = generate_sr_diffusion(
-                lr_image=img,
-                commands=upsample_commands)
+        model_resource_ = current_app.config["model_resource"]
+        img, ret_status = model_resource_.generate_diffusion(
+            cond_img=img,
+            br_commands=br_commands,
+            sr_commands=sr_commands,
+            cond_img_dim=current_app.config["BODY_POSE_IMG_DIM"],
+            log=print)
+
+        if ret_status == False:
+            # Error No image passed.
+            data_dict = {
+                "image": None,
+                "message": "Server busy, please try again after a few minutes.",
+                "status": 503
+            }
+
+            resp = jsonify(data_dict)
+            resp.status_code = 503
+            return resp 
     except Exception as e:
         print(f"An error occured generating image: {e}")
         data_dict = {
@@ -157,47 +172,71 @@ def generate_myface():
         sr_skip_step = None
 
     try:
-        commands = ["--model_path", current_app.config["MYFACE_BASE_PATH"]]
+        br_commands = [
+            "--model_path",
+            current_app.config["MYFACE_BASE_PATH"]]
 
-        commands.append("--device")
-        commands.append(current_app.config["DEVICE"])
+        br_commands.append("--device")
+        br_commands.append(current_app.config["DEVICE"])
         if seed:
-            commands.append("-s")
-            commands.append(seed)
+            br_commands.append("-s")
+            br_commands.append(seed)
         if sample_alg:
-            commands.append("--diff_alg")
-            commands.append(sample_alg)
+            br_commands.append("--diff_alg")
+            br_commands.append(sample_alg)
 
         if sample_alg == "ddim":
-            commands.append("--ddim_step_size")
-            commands.append(base_skip_step)
+            br_commands.append("--ddim_step_size")
+            br_commands.append(base_skip_step)
 
-        commands.append("--label")
-        commands.append(left_eye)
-        commands.append(right_eye)
-        commands.append(mouth)
-        commands.append(showing_teeth)
+        br_commands.append("--label")
+        br_commands.append(left_eye)
+        br_commands.append(right_eye)
+        br_commands.append(mouth)
+        br_commands.append(showing_teeth)
 
-        img = generate_base_diffusion(commands=commands)
+        # img = generate_base_diffusion(commands=commands)
 
         if upsample:
-            upsample_commands = ["--model_path", current_app.config["MYFACE_SR_PATH"]]
+            sr_commands = ["--model_path", current_app.config["MYFACE_SR_PATH"]]
 
-            upsample_commands.append("--device")
-            upsample_commands.append(current_app.config["DEVICE"])
+            sr_commands.append("--device")
+            sr_commands.append(current_app.config["DEVICE"])
 
-            upsample_commands.append("--cold_step_size")
-            upsample_commands.append(sr_skip_step)
+            sr_commands.append("--cold_step_size")
+            sr_commands.append(sr_skip_step)
 
-            upsample_commands.append("--label")
-            upsample_commands.append(left_eye)
-            upsample_commands.append(right_eye)
-            upsample_commands.append(mouth)
-            upsample_commands.append(showing_teeth)
+            sr_commands.append("--label")
+            sr_commands.append(left_eye)
+            sr_commands.append(right_eye)
+            sr_commands.append(mouth)
+            sr_commands.append(showing_teeth)
 
-            img = generate_sr_diffusion(
-                lr_image=img,
-                commands=upsample_commands)
+            # img = generate_sr_diffusion(
+            #     lr_image=img,
+            #    commands=upsample_commands)
+        else:
+            sr_commands = None
+
+        model_resource_ = current_app.config["model_resource"]
+        img, ret_status = model_resource_.generate_diffusion(
+            cond_img=None,
+            br_commands=br_commands,
+            sr_commands=sr_commands,
+            cond_img_dim=current_app.config["MYFACE_IMG_DIM"],
+            log=print)
+        
+        if ret_status == False:
+            # Error No image passed.
+            data_dict = {
+                "image": None,
+                "message": "Server busy, please try again after a few minutes.",
+                "status": 503
+            }
+
+            resp = jsonify(data_dict)
+            resp.status_code = 503
+            return resp 
 
     except Exception as e:
         print(f"An error occured generating image: {e}")
@@ -318,45 +357,67 @@ def generate_celeb_faces():
         base_skip_step = None
 
     try:
-        commands = ["--model_path", current_app.config["CELEBFACE_BASE_PATH"]]
+        br_commands = [
+            "--model_path",
+            current_app.config["CELEBFACE_BASE_PATH"]]
 
-        commands.append("--device")
-        commands.append(current_app.config["DEVICE"])
+        br_commands.append("--device")
+        br_commands.append(current_app.config["DEVICE"])
         if seed:
-            commands.append("-s")
-            commands.append(seed)
+            br_commands.append("-s")
+            br_commands.append(seed)
         if sample_alg:
-            commands.append("--diff_alg")
-            commands.append(sample_alg)
+            br_commands.append("--diff_alg")
+            br_commands.append(sample_alg)
 
         if sample_alg == "ddim":
-            commands.append("--ddim_step_size")
-            commands.append(base_skip_step)
+            br_commands.append("--ddim_step_size")
+            br_commands.append(base_skip_step)
 
-        commands.append("--label")
-        commands.append(bald)
-        commands.append(black_hair)
-        commands.append(blond_hair)
-        commands.append(brown_hair)
-        commands.append(bushy_eyebrows)
-        commands.append(eyeglasses)
-        commands.append(goatee)
-        commands.append(gray_hair)
-        commands.append(male)
-        commands.append(mouth_open)
-        commands.append(mustache)
-        commands.append(no_beard)
-        commands.append(sideburns)
-        commands.append(smiling)
-        commands.append(straight_hair)
-        commands.append(wavy_hair)
-        commands.append(wearing_earrings)
-        commands.append(wearing_hat)
-        commands.append(wearing_lipstick)
-        commands.append(wearing_necklace)
-        commands.append(wearing_necktie)
+        br_commands.append("--label")
+        br_commands.append(bald)
+        br_commands.append(black_hair)
+        br_commands.append(blond_hair)
+        br_commands.append(brown_hair)
+        br_commands.append(bushy_eyebrows)
+        br_commands.append(eyeglasses)
+        br_commands.append(goatee)
+        br_commands.append(gray_hair)
+        br_commands.append(male)
+        br_commands.append(mouth_open)
+        br_commands.append(mustache)
+        br_commands.append(no_beard)
+        br_commands.append(sideburns)
+        br_commands.append(smiling)
+        br_commands.append(straight_hair)
+        br_commands.append(wavy_hair)
+        br_commands.append(wearing_earrings)
+        br_commands.append(wearing_hat)
+        br_commands.append(wearing_lipstick)
+        br_commands.append(wearing_necklace)
+        br_commands.append(wearing_necktie)
 
-        img = generate_base_diffusion(commands=commands)
+        sr_commands = None
+
+        model_resource_ = current_app.config["model_resource"]
+        img, ret_status = model_resource_.generate_diffusion(
+            cond_img=None,
+            br_commands=br_commands,
+            sr_commands=sr_commands,
+            cond_img_dim=current_app.config["CELEBFACE_IMG_DIM"],
+            log=print)
+        
+        if ret_status == False:
+            # Error No image passed.
+            data_dict = {
+                "image": None,
+                "message": "Server busy, please try again after a few minutes.",
+                "status": 503
+            }
+
+            resp = jsonify(data_dict)
+            resp.status_code = 503
+            return resp 
     except Exception as e:
         print(f"An error occured generating image: {e}")
         data_dict = {
@@ -377,7 +438,6 @@ def generate_celeb_faces():
     resp = jsonify(data_dict)
     resp.status_code = 200
     return resp
-
 
 @bp.route("/api/anime_portraits", methods=["POST"])
 def generate_anime_portraits():
@@ -411,42 +471,67 @@ def generate_anime_portraits():
         sr_skip_step = None
 
     try:
-        commands = ["--model_path", current_app.config["ANIMEPORTRAITS_BASE_PATH"]]
+        br_commands = [
+            "--model_path",
+            current_app.config["ANIMEPORTRAITS_BASE_PATH"]]
 
-        commands.append("--device")
-        commands.append(current_app.config["DEVICE"])
+        br_commands.append("--device")
+        br_commands.append(current_app.config["DEVICE"])
         if seed:
-            commands.append("-s")
-            commands.append(seed)
+            br_commands.append("-s")
+            br_commands.append(seed)
         if sample_alg:
-            commands.append("--diff_alg")
-            commands.append(sample_alg)
+            br_commands.append("--diff_alg")
+            br_commands.append(sample_alg)
 
         if sample_alg == "ddim":
-            commands.append("--ddim_step_size")
-            commands.append(base_skip_step)
+            br_commands.append("--ddim_step_size")
+            br_commands.append(base_skip_step)
 
-        commands.append("--label")
-        commands.extend(centroids_labels)
+        br_commands.append("--label")
+        br_commands.extend(centroids_labels)
 
-        img = generate_base_diffusion(commands=commands)
+        # img = generate_base_diffusion(commands=commands)
 
         if upsample:
-            upsample_commands = ["--model_path", current_app.config["ANIMEPORTRAITS_SR_PATH"]]
+            sr_commands = [
+                "--model_path",
+                current_app.config["ANIMEPORTRAITS_SR_PATH"]]
 
-            upsample_commands.append("--device")
-            upsample_commands.append(current_app.config["DEVICE"])
+            sr_commands.append("--device")
+            sr_commands.append(current_app.config["DEVICE"])
 
-            upsample_commands.append("--cold_step_size")
-            upsample_commands.append(sr_skip_step)
+            sr_commands.append("--cold_step_size")
+            sr_commands.append(sr_skip_step)
 
-            upsample_commands.append("--label")
-            upsample_commands.extend(centroids_labels)
+            sr_commands.append("--label")
+            sr_commands.extend(centroids_labels)
 
-            img = generate_sr_diffusion(
-                lr_image=img,
-                commands=upsample_commands)
+            #img = generate_sr_diffusion(
+            #    lr_image=img,
+            #    commands=upsample_commands)
+        else:
+            sr_commands = None
 
+        model_resource_ = current_app.config["model_resource"]
+        img, ret_status = model_resource_.generate_diffusion(
+            cond_img=None,
+            br_commands=br_commands,
+            sr_commands=sr_commands,
+            cond_img_dim=current_app.config["ANIMEPORTRAITS_IMG_DIM"],
+            log=print)
+        
+        if ret_status == False:
+            # Error No image passed.
+            data_dict = {
+                "image": None,
+                "message": "Server busy, please try again after a few minutes.",
+                "status": 503
+            }
+
+            resp = jsonify(data_dict)
+            resp.status_code = 503
+            return resp 
     except Exception as e:
         print(f"An error occured generating image: {e}")
         data_dict = {

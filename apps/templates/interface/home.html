@@ -204,13 +204,13 @@
                             </div>
                             <hr>
                             <div class="sampling-option">
-                                <label for="upsample-face"> Upsample Image (Max Res: 256px)</label>
                                 <input
                                     id="upsample-face"
                                     type="checkbox"
                                     name="upsample-face"
                                     value="upsample-face"
                                     onclick="toggle_sr_skip_steps('face')">
+                                <label for="upsample-face"> Upsample Image (Max Res: 256px)</label>
                             </div>
 
                             <div class="sampling-option">
@@ -659,6 +659,8 @@
             if (result["status"] === 200) {
                 image_b64 = result["image"];
                 show_generated_image(image_b64, "body-pose");
+            } else if (result["status"] === 503 || result["status"] === 500) {
+                alert(result["message"]);
             }
         } catch (error) {
             // TypeError: Failed to fetch
@@ -744,6 +746,8 @@
             if (result["status"] === 200) {
                 image_b64 = result["image"];
                 show_generated_image(image_b64, "face");
+            } else if (result["status"] === 503 || result["status"] === 500) {
+                alert(result["message"]);
             }
         }
         catch(err) {
@@ -885,6 +889,8 @@
             if (result["status"] === 200) {
                 image_b64 = result["image"];
                 show_generated_image(image_b64, "celeb-face");
+            } else if (result["status"] === 503 || result["status"] === 500) {
+                alert(result["message"]);
             }
         }
         catch(err) {
@@ -958,6 +964,8 @@
             if (result["status"] === 200) {
                 image_b64 = result["image"];
                 show_generated_image(image_b64, "anime-portraits");
+            } else if (result["status"] === 503 || result["status"] === 500) {
+                alert(result["message"]);
             }
         }
         catch(err) {

@@ -4,7 +4,7 @@ from flask import Flask
 
 from config import Config
 
-import model_libs
+from diffusion_apps.model_resource import ModelResource
 
 def create_app(config_class=Config):
     template_dir = os.path.abspath("./apps/templates")
@@ -15,7 +15,11 @@ def create_app(config_class=Config):
         static_folder=static_dir)
     app.config.from_object(config_class)
 
-    # Initialize Flask extensions here
+    # Used to limit access to resources such as CPU/CUDA by models.
+    model_resource_obj = ModelResource()
+    app.config["model_resource"] = model_resource_obj
+
+    # Initialize Flask extensions here.
 
     # Blueprints.
     from apps.interface import bp as interface_bp
