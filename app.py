@@ -19,6 +19,14 @@ def create_app(config_class=Config):
     model_resource_obj = ModelResource()
     app.config["model_resource"] = model_resource_obj
 
+    # Secure File Uploads.
+    app.config["MAX_CONTENT_LENGTH"] = 1_024 * 1_024
+    app.config["UPLOAD_EXTENSIONS"] = [".png", ".jpg"]
+
+    # Supported Sampling Algorithms.
+    app.config["ALLOWED_SAMPLING_ALG"] = ["ddim", "ddpm"]
+    app.config["DEFAULT_SKIP_STEP"] = 100
+
     # Initialize Flask extensions here.
 
     # Blueprints.

@@ -87,7 +87,7 @@
                                     max="1000"
                                     value="100"
                                     class="slider"
-                                    oninput="baseskipstepoutbodypose.value=this.value">
+                                    oninput="baseskipstepbodypose.value=this.value">
                             </div>
                             <hr>
                             <div class="sampling-option">
@@ -357,7 +357,7 @@
 
                             <div class="sampling-option">
                                 <label for="sampling-alg-celeb-face" class="option-full-width">Sampling Algorithm:</label>
-                                <select name="sampling-alg-celeb-face" class="option-full-width" id="sampling-alg-celeb-face" onchange="toggle_base_skip_steps('face')">
+                                <select name="sampling-alg-celeb-face" class="option-full-width" id="sampling-alg-celeb-face" onchange="toggle_base_skip_steps('celeb-face')">
                                     <option value="ddim">DDIM</option>
                                     <option value="ddpm">DDPM</option>
                                 </select>
@@ -602,40 +602,33 @@
 
         // Get Seed Value.
         const use_specific_seed_elem = document.getElementById("use-specific-seed-body-pose");
+        var seed_value = null;
         if (use_specific_seed_elem.checked) {
             const seed_elem = document.getElementById("seed-val-body-pose");
             seed_value = seed_elem.value;
-        } else {
-            seed_value = "";
         }
 
         // Get Sampling Algorithm.
         const sampling_alg_elem = document.getElementById("sampling-alg-body-pose");
-        sampling_alg_value = sampling_alg_elem.value;
+        var sampling_alg_value = sampling_alg_elem.value;
 
         // Get Steps to skip (Low Resolution).
-        if (sampling_alg_value == "ddim") {
-            var base_skip_steps_elem = document.getElementById("base-skip-steps-body-pose");
-            var base_skip_steps_value = base_skip_steps_elem.value;
-        } else {
-            base_skip_steps_value = "";
-        }
+        const base_skip_steps_elem = document.getElementById("base-skip-steps-body-pose");
+        var base_skip_steps_value = base_skip_steps_elem.value;
 
         // Get Upsample Boolean.
         const upsample_elem = document.getElementById("upsample-body-pose");
         upsample_value = upsample_elem.checked;
 
         // Get Steps to skip (Super Resolution).
-        if (upsample_value) {
-            var sr_skip_steps_elem = document.getElementById("sr-skip-steps-body-pose");
-            var sr_skip_steps_value = sr_skip_steps_elem.value;
-        } else {
-            var sr_skip_steps_value = "";
-        }
+        const sr_skip_steps_elem = document.getElementById("sr-skip-steps-body-pose");
+        var sr_skip_steps_value = sr_skip_steps_elem.value;
 
         let formData = new FormData();
         formData.append("canvas_image", imageBlob, "image.png");
-        formData.append("seed", seed_value);
+        if (seed_value) {
+            formData.append("seed", seed_value);
+        }
         formData.append("sample_alg", sampling_alg_value);
         formData.append("base_skip_step", base_skip_steps_value);
         formData.append("upsample", upsample_value);
@@ -659,7 +652,7 @@
             if (result["status"] === 200) {
                 image_b64 = result["image"];
                 show_generated_image(image_b64, "body-pose");
-            } else if (result["status"] === 503 || result["status"] === 500) {
+            } else if (result["status"] !== 200 && "message" in result) {
                 alert(result["message"]);
             }
         } catch (error) {
@@ -686,43 +679,40 @@
         
         // Get Seed Value.
         const use_specific_seed_elem = document.getElementById("use-specific-seed-face");
+        var seed_value = null;
         if (use_specific_seed_elem.checked) {
             const seed_elem = document.getElementById("seed-val-face");
             seed_value = seed_elem.value;
-        } else {
-            seed_value = "";
         }
-
+        /*
+        const use_specific_seed_elem = document.getElementById("use-specific-seed-face");
+        const seed_elem = document.getElementById("seed-val-face");
+        seed_value = seed_elem.value;
+        */
         // Get Sampling Algorithm.
         const sampling_alg_elem = document.getElementById("sampling-alg-face");
         const sampling_alg_value = sampling_alg_elem.value;
 
         // Get Steps to skip (Low Resolution).
-        if (sampling_alg_value == "ddim") {
-            const base_skip_steps_elem = document.getElementById("base-skip-steps-face");
-            base_skip_steps_value = base_skip_steps_elem.value;
-        } else {
-            base_skip_steps_value = "";
-        }
+        const base_skip_steps_elem = document.getElementById("base-skip-steps-face");
+        base_skip_steps_value = base_skip_steps_elem.value;
 
         // Get Upsample Boolean.
         const upsample_elem = document.getElementById("upsample-face");
         const upsample_value = upsample_elem.checked;
 
         // Get Steps to skip (Super Resolution).
-        if (upsample_value) {
-            const sr_skip_steps_elem = document.getElementById("sr-skip-steps-face");
-            var sr_skip_steps_value = sr_skip_steps_elem.value;
-        } else {
-            var sr_skip_steps_value = "";
-        }
+        const sr_skip_steps_elem = document.getElementById("sr-skip-steps-face");
+        var sr_skip_steps_value = sr_skip_steps_elem.value;
 
         let formData = new FormData();
         formData.append("left_eye", left_eye_value);
         formData.append("right_eye", right_eye_value);
         formData.append("mouth", mouth_value);
         formData.append("showing_teeth", showing_teeth_value);
-        formData.append("seed", seed_value);
+        if (seed_value) {
+            formData.append("seed", seed_value);
+        }
         formData.append("sample_alg", sampling_alg_value);
         formData.append("base_skip_step", base_skip_steps_value);
         formData.append("upsample", upsample_value);
@@ -746,7 +736,7 @@
             if (result["status"] === 200) {
                 image_b64 = result["image"];
                 show_generated_image(image_b64, "face");
-            } else if (result["status"] === 503 || result["status"] === 500) {
+            } else if (result["status"] !== 200 && "message" in result) {
                 alert(result["message"]);
             }
         }
@@ -826,11 +816,10 @@
 
         // Get Seed Value.
         const use_specific_seed_elem = document.getElementById("use-specific-seed-celeb-face");
+        var seed_value = null;
         if (use_specific_seed_elem.checked) {
             const seed_elem = document.getElementById("seed-val-celeb-face");
             seed_value = seed_elem.value;
-        } else {
-            seed_value = "";
         }
 
         // Get Sampling Algorithm.
@@ -838,12 +827,8 @@
         const sampling_alg_value = sampling_alg_elem.value;
 
         // Get Steps to skip (Low Resolution).
-        if (sampling_alg_value == "ddim") {
-            const base_skip_steps_elem = document.getElementById("base-skip-steps-celeb-face");
-            base_skip_steps_value = base_skip_steps_elem.value;
-        } else {
-            base_skip_steps_value = "";
-        }
+        const base_skip_steps_elem = document.getElementById("base-skip-steps-celeb-face");
+        base_skip_steps_value = base_skip_steps_elem.value;
 
         let formData = new FormData();
         formData.append("bald", bald_value);
@@ -868,7 +853,9 @@
         formData.append("wearing_lipstick", wearing_lipstick_value);
         formData.append("wearing_necklace", wearing_necklace_value);
         formData.append("wearing_necktie", wearing_necktie_value);
-        formData.append("seed", seed_value);
+        if (seed_value) {
+            formData.append("seed", seed_value);
+        }
         formData.append("sample_alg", sampling_alg_value);
         formData.append("base_skip_step", base_skip_steps_value);
         
@@ -889,7 +876,7 @@
             if (result["status"] === 200) {
                 image_b64 = result["image"];
                 show_generated_image(image_b64, "celeb-face");
-            } else if (result["status"] === 503 || result["status"] === 500) {
+            }  else if (result["status"] !== 200 && "message" in result) {
                 alert(result["message"]);
             }
         }
@@ -908,11 +895,10 @@
 
         // Get Seed Value.
         const use_specific_seed_elem = document.getElementById("use-specific-seed-anime-portraits");
+        var seed_value = null;
         if (use_specific_seed_elem.checked) {
             const seed_elem = document.getElementById("seed-val-anime-portraits");
             seed_value = seed_elem.value;
-        } else {
-            seed_value = "";
         }
 
         // Get Sampling Algorithm.
@@ -920,28 +906,22 @@
         const sampling_alg_value = sampling_alg_elem.value;
 
         // Get Steps to skip (Low Resolution).
-        if (sampling_alg_value == "ddim") {
-            const base_skip_steps_elem = document.getElementById("base-skip-steps-anime-portraits");
-            base_skip_steps_value = base_skip_steps_elem.value;
-        } else {
-            base_skip_steps_value = "";
-        }
+        const base_skip_steps_elem = document.getElementById("base-skip-steps-anime-portraits");
+        var base_skip_steps_value = base_skip_steps_elem.value;
 
         // Get Upsample Boolean.
         const upsample_elem = document.getElementById("upsample-anime-portraits");
-        upsample_value = upsample_elem.checked;
+        var upsample_value = upsample_elem.checked;
 
         // Get Steps to skip (Super Resolution).
-        if (upsample_value) {
-            var sr_skip_steps_elem = document.getElementById("sr-skip-steps-anime-portraits");
-            var sr_skip_steps_value = sr_skip_steps_elem.value;
-        } else {
-            var sr_skip_steps_value = "";
-        }
+        const sr_skip_steps_elem = document.getElementById("sr-skip-steps-anime-portraits");
+        var sr_skip_steps_value = sr_skip_steps_elem.value;
 
         let formData = new FormData();
         formData.append("centroids_index", centroids_index);
-        formData.append("seed", seed_value);
+        if (seed_value) {
+            formData.append("seed", seed_value);
+        }
         formData.append("sample_alg", sampling_alg_value);
         formData.append("base_skip_step", base_skip_steps_value);
         formData.append("upsample", upsample_value);
@@ -964,7 +944,7 @@
             if (result["status"] === 200) {
                 image_b64 = result["image"];
                 show_generated_image(image_b64, "anime-portraits");
-            } else if (result["status"] === 503 || result["status"] === 500) {
+            }  else if (result["status"] !== 200 && "message" in result) {
                 alert(result["message"]);
             }
         }

@@ -3,51 +3,83 @@ from flask import (
     jsonify,
     current_app)
 
-from apps.interface import bp
-
 from apps.interface.utils import (
     convert_binary_to_numpy,
     convert_numpy_to_base64)
+from apps.interface import bp
+
+from apps.interface.validators import *
 
 @bp.route("/api/myposes", methods=["POST"])
 def generate_body_poses():
     # Read image file string data
     canvas_image = request.files["canvas_image"]
-    if canvas_image.filename != "":
-        img = convert_binary_to_numpy(canvas_image)
-    else:
-        # Error No image passed.
-        data_dict = {
-            "image": None,
-            "message": "No / Invalid Image passed.",
-            "status": 400
-        }
-
-        resp = jsonify(data_dict)
-        resp.status_code = 400
-        return resp 
     
-    # Conditional Information for Base Diffusion.
-    seed = request.form.get("seed", None)
-    if not seed:
-        seed = None
+    # Check if canvas image is valid.
+    valid_img, error = validate_canvas_image(
+        canvas_image=canvas_image,
+        valid_img_extensions=current_app.config["UPLOAD_EXTENSIONS"])
 
+    if not valid_img:
+        resp = jsonify(error)
+        resp.status_code = error["status"]
+        return resp
+    
+    img = convert_binary_to_numpy(canvas_image)
+
+    # Seed Params.
+    seed = request.form.get("seed")
+    valid_seed, error = is_valid_seed(seed)
+    if not valid_seed:
+        resp = jsonify(error)
+        resp.status_code = error["status"]
+        return resp
+
+    # Diffusion Sample Algorithms Params.
     sample_alg = request.form.get("sample_alg", "ddpm")
-
-    base_skip_step = request.form.get("base_skip_step", 100)
-    if not base_skip_step:
-        base_skip_step = None
-
-    upsample = request.form.get("upsample", False)
-    if upsample == "false":
-        upsample = False
-    else:
-        upsample = True
-
-    sr_skip_step = request.form.get("sr_skip_step", 100)
-    if not sr_skip_step:
-        sr_skip_step = None
+    valid_sample_alg, error = is_valid_sample_alg(
+        sample_alg,
+        current_app.config["ALLOWED_SAMPLING_ALG"]) 
+    if not valid_sample_alg:
+        resp = jsonify(error)
+        resp.status_code = error["status"]
+        return resp
     
+    # Base Model Skip Steps Params.
+    default_skip_step = current_app.config["DEFAULT_SKIP_STEP"]
+    base_skip_step = request.form.get(
+        "base_skip_step",
+        default_skip_step)
+    valid_base_skip_step, error = is_valid_skip_step(base_skip_step)
+    if not valid_base_skip_step:
+        resp = jsonify(error)
+        resp.status_code = error["status"]
+        return resp
+
+    # Upsample Params.
+    valid_upsample_params = {
+        "false": False,
+        "true": True,
+        None: False
+    }
+    upsample = request.form.get("upsample")
+    valid_upsample, out = valid_param_value(upsample, valid_upsample_params)
+    if not valid_upsample:
+        resp = jsonify(out)
+        resp.status_code = error["status"]
+        return resp
+    upsample = out
+    
+    # Super Resolution Model Skip Steps Params.
+    sr_skip_step = request.form.get(
+        "sr_skip_step",
+        default_skip_step)
+    valid_sr_skip_step, error = is_valid_skip_step(sr_skip_step)
+    if not valid_sr_skip_step:
+        resp = jsonify(error)
+        resp.status_code = error["status"]
+        return resp
+
     try:
         # Base Resolution Parameters.
         br_commands = [
@@ -58,16 +90,17 @@ def generate_body_poses():
         br_commands.append(current_app.config["DEVICE"])
         if seed:
             br_commands.append("-s")
-            br_commands.append(seed)
-        if sample_alg:
-            br_commands.append("--diff_alg")
-            br_commands.append(sample_alg)
+            br_commands.append(str(seed))
+
+        br_commands.append("--diff_alg")
+        br_commands.append(sample_alg)
         
         if sample_alg == "ddim":
             br_commands.append("--ddim_step_size")
-            br_commands.append(base_skip_step)
+            br_commands.append(str(base_skip_step))
         
         if upsample:
+            # Super Resolution Parameters.
             sr_commands = [
                 "--model_path",
                 current_app.config["BODY_POSE_SR_PATH"]]
@@ -76,10 +109,11 @@ def generate_body_poses():
             sr_commands.append(current_app.config["DEVICE"])
 
             sr_commands.append("--cold_step_size")
-            sr_commands.append(sr_skip_step)
+            sr_commands.append(str(sr_skip_step))
         else:
             sr_commands = None
 
+        # Get Hardware Resource if available to generate image.
         model_resource_ = current_app.config["model_resource"]
         img, ret_status = model_resource_.generate_diffusion(
             cond_img=img,
@@ -89,7 +123,7 @@ def generate_body_poses():
             log=print)
 
         if ret_status == False:
-            # Error No image passed.
+            # Error No image returned.
             data_dict = {
                 "image": None,
                 "message": "Server busy, please try again after a few minutes.",
@@ -122,54 +156,109 @@ def generate_body_poses():
 
 @bp.route("/api/myface", methods=["POST"])
 def generate_myface():
+    valid_face_param = {
+        "false": 0,
+        "true": 1,
+        "0": 0,
+        "1": 1,
+        None: 0}
+    
     # Left Eye.
-    left_eye = request.form.get("left_eye", False)
-    if left_eye == "false":
-        left_eye = "0"
-    else:
-        left_eye = "1"
+    left_eye = request.form.get("left_eye")
+    valid_status, out = valid_param_value(
+        left_eye,
+        valid_face_param)
+    if not valid_status:
+        resp = jsonify(out)
+        resp.status_code = out["message"]
+        return resp
+    left_eye = out
 
     # Right Eye.
-    right_eye = request.form.get("right_eye", False)
-    if right_eye == "false":
-        right_eye = "0"
-    else:
-        right_eye = "1"
+    right_eye = request.form.get("right_eye")
+    valid_status, out = valid_param_value(
+        right_eye,
+        valid_face_param)
+    if not valid_status:
+        resp = jsonify(out)
+        resp.status_code = out["message"]
+        return resp
+    right_eye = out
 
     # Mouth.
-    mouth = request.form.get("mouth", False)
-    if mouth == "false":
-        mouth = "0"
-    else:
-        mouth = "1"
+    mouth = request.form.get("mouth")
+    valid_status, out = valid_param_value(
+        mouth,
+        valid_face_param)
+    if not valid_status:
+        resp = jsonify(out)
+        resp.status_code = out["message"]
+        return resp
+    mouth = out
 
     # Showing Teeth
-    showing_teeth = request.form.get("showing_teeth", False)
-    if showing_teeth == "false":
-        showing_teeth = "0"
-    else:
-        showing_teeth = "1"
+    showing_teeth = request.form.get("showing_teeth")
+    valid_status, out = valid_param_value(
+        showing_teeth,
+        valid_face_param)
+    if not valid_status:
+        resp = jsonify(out)
+        resp.status_code = out["message"]
+        return resp
+    showing_teeth = out
 
-    # Conditional Information for Base Diffusion.
-    seed = request.form.get("seed", None)
-    if not seed:
-        seed = None
+    # Seed Params.
+    seed = request.form.get("seed")
+    valid_seed, error = is_valid_seed(seed)
+    if not valid_seed:
+        resp = jsonify(error)
+        resp.status_code = error["status"]
+        return resp
 
+    # Diffusion Sample Algorithms Params.
     sample_alg = request.form.get("sample_alg", "ddpm")
+    valid_sample_alg, error = is_valid_sample_alg(
+        sample_alg,
+        current_app.config["ALLOWED_SAMPLING_ALG"]) 
+    if not valid_sample_alg:
+        resp = jsonify(error)
+        resp.status_code = error["status"]
+        return resp
+    
+    # Base Model Skip Steps Params.
+    default_skip_step = current_app.config["DEFAULT_SKIP_STEP"]
+    base_skip_step = request.form.get(
+        "base_skip_step",
+        default_skip_step)
+    valid_base_skip_step, error = is_valid_skip_step(base_skip_step)
+    if not valid_base_skip_step:
+        resp = jsonify(error)
+        resp.status_code = error["status"]
+        return resp
 
-    base_skip_step = request.form.get("base_skip_step", 100)
-    if not base_skip_step:
-        base_skip_step = None
-
-    upsample = request.form.get("upsample", False)
-    if upsample == "false":
-        upsample = False
-    else:
-        upsample = True
-
-    sr_skip_step = request.form.get("sr_skip_step", 100)
-    if not sr_skip_step:
-        sr_skip_step = None
+    # Upsample Params.
+    valid_upsample_params = {
+        "false": False,
+        "true": True,
+        None: False
+    }
+    upsample = request.form.get("upsample")
+    valid_upsample, out = valid_param_value(upsample, valid_upsample_params)
+    if not valid_upsample:
+        resp = jsonify(out)
+        resp.status_code = error["status"]
+        return resp
+    upsample = out
+    
+    # Super Resolution Model Skip Steps Params.
+    sr_skip_step = request.form.get(
+        "sr_skip_step",
+        default_skip_step)
+    valid_sr_skip_step, error = is_valid_skip_step(sr_skip_step)
+    if not valid_sr_skip_step:
+        resp = jsonify(error)
+        resp.status_code = error["status"]
+        return resp
 
     try:
         br_commands = [
@@ -180,44 +269,41 @@ def generate_myface():
         br_commands.append(current_app.config["DEVICE"])
         if seed:
             br_commands.append("-s")
-            br_commands.append(seed)
+            br_commands.append(str(seed))
         if sample_alg:
             br_commands.append("--diff_alg")
-            br_commands.append(sample_alg)
+            br_commands.append(str(sample_alg))
 
         if sample_alg == "ddim":
             br_commands.append("--ddim_step_size")
-            br_commands.append(base_skip_step)
+            br_commands.append(str(base_skip_step))
 
         br_commands.append("--label")
-        br_commands.append(left_eye)
-        br_commands.append(right_eye)
-        br_commands.append(mouth)
-        br_commands.append(showing_teeth)
-
-        # img = generate_base_diffusion(commands=commands)
+        br_commands.append(str(left_eye))
+        br_commands.append(str(right_eye))
+        br_commands.append(str(mouth))
+        br_commands.append(str(showing_teeth))
 
         if upsample:
-            sr_commands = ["--model_path", current_app.config["MYFACE_SR_PATH"]]
+            sr_commands = [
+                "--model_path",
+                current_app.config["MYFACE_SR_PATH"]]
 
             sr_commands.append("--device")
             sr_commands.append(current_app.config["DEVICE"])
 
             sr_commands.append("--cold_step_size")
-            sr_commands.append(sr_skip_step)
+            sr_commands.append(str(sr_skip_step))
 
             sr_commands.append("--label")
-            sr_commands.append(left_eye)
-            sr_commands.append(right_eye)
-            sr_commands.append(mouth)
-            sr_commands.append(showing_teeth)
-
-            # img = generate_sr_diffusion(
-            #     lr_image=img,
-            #    commands=upsample_commands)
+            sr_commands.append(str(left_eye))
+            sr_commands.append(str(right_eye))
+            sr_commands.append(str(mouth))
+            sr_commands.append(str(showing_teeth))
         else:
             sr_commands = None
 
+        # Get Hardware Resource if available to generate image.
         model_resource_ = current_app.config["model_resource"]
         img, ret_status = model_resource_.generate_diffusion(
             cond_img=None,
@@ -227,7 +313,7 @@ def generate_myface():
             log=print)
         
         if ret_status == False:
-            # Error No image passed.
+            # Error No image returned.
             data_dict = {
                 "image": None,
                 "message": "Server busy, please try again after a few minutes.",
@@ -237,7 +323,6 @@ def generate_myface():
             resp = jsonify(data_dict)
             resp.status_code = 503
             return resp 
-
     except Exception as e:
         print(f"An error occured generating image: {e}")
         data_dict = {
@@ -261,101 +346,231 @@ def generate_myface():
 
 @bp.route("/api/celeb_faces", methods=["POST"])
 def generate_celeb_faces():
-    # Bald,
-    bald = request.form.get("bald", False)
-    bald = "-1" if bald == "false" else "1"
+    valid_celeb_param = {
+        "false": 0,
+        "true": 1,
+        "0": 0,
+        "1": 1,
+        None: 0}
     
+    # Bald
+    bald = request.form.get("bald")
+    status, out = valid_param_value(bald, valid_celeb_param)
+    if not status:
+        resp = jsonify(out)
+        resp.status_code = out["status"]
+        return resp
+    bald = out
+
     # Black_Hair
-    black_hair = request.form.get("black_hair", False)
-    black_hair = "-1" if black_hair == "false" else "1"
+    black_hair = request.form.get("black_hair")
+    status, out = valid_param_value(black_hair, valid_celeb_param)
+    if not status:
+        resp = jsonify(out)
+        resp.status_code = out["status"]
+        return resp
+    black_hair = out
 
     # Blond_Hair
-    blond_hair = request.form.get("blond_hair", False)
-    blond_hair = "-1" if blond_hair == "false" else "1"
+    blond_hair = request.form.get("blond_hair")
+    status, out = valid_param_value(blond_hair, valid_celeb_param)
+    if not status:
+        resp = jsonify(out)
+        resp.status_code = out["status"]
+        return resp
+    blond_hair = out
 
     # Brown_Hair
-    brown_hair = request.form.get("brown_hair", False)
-    brown_hair = "-1" if brown_hair == "false" else "1"
+    brown_hair = request.form.get("brown_hair")
+    status, out = valid_param_value(brown_hair, valid_celeb_param)
+    if not status:
+        resp = jsonify(out)
+        resp.status_code = out["status"]
+        return resp
+    brown_hair = out
 
     # Bushy_Eyebrows
-    bushy_eyebrows = request.form.get("bushy_eyebrows", False)
-    bushy_eyebrows = "-1" if bushy_eyebrows == "false" else "1"
+    bushy_eyebrows = request.form.get("bushy_eyebrows")
+    status, out = valid_param_value(bushy_eyebrows, valid_celeb_param)
+    if not status:
+        resp = jsonify(out)
+        resp.status_code = out["status"]
+        return resp
+    bushy_eyebrows = out
 
     # Eyeglasses
-    eyeglasses = request.form.get("eyeglasses", False)
-    eyeglasses = "-1" if eyeglasses == "false" else "1"
+    eyeglasses = request.form.get("eyeglasses")
+    status, out = valid_param_value(eyeglasses, valid_celeb_param)
+    if not status:
+        resp = jsonify(out)
+        resp.status_code = out["status"]
+        return resp
+    eyeglasses = out
 
     # Goatee
-    goatee = request.form.get("goatee", False)
-    goatee = "-1" if goatee == "false" else "1"
+    goatee = request.form.get("goatee")
+    status, out = valid_param_value(goatee, valid_celeb_param)
+    if not status:
+        resp = jsonify(out)
+        resp.status_code = out["status"]
+        return resp
+    goatee = out
 
     # Gray_Hair
-    gray_hair = request.form.get("gray_hair", False)
-    gray_hair = "-1" if gray_hair == "false" else "1"
+    gray_hair = request.form.get("gray_hair")
+    status, out = valid_param_value(gray_hair, valid_celeb_param)
+    if not status:
+        resp = jsonify(out)
+        resp.status_code = out["status"]
+        return resp
+    gray_hair = out
 
     # Male
-    male = request.form.get("male", False)
-    male = "-1" if male == "false" else "1"
+    male = request.form.get("male")
+    status, out = valid_param_value(male, valid_celeb_param)
+    if not status:
+        resp = jsonify(out)
+        resp.status_code = out["status"]
+        return resp
+    male = out
 
     # Mouth_Slightly_Open
-    mouth_open = request.form.get("mouth_open", False)
-    mouth_open = "-1" if mouth_open == "false" else "1"
+    mouth_open = request.form.get("mouth_open")
+    status, out = valid_param_value(mouth_open, valid_celeb_param)
+    if not status:
+        resp = jsonify(out)
+        resp.status_code = out["status"]
+        return resp
+    mouth_open = out
 
     # Mustache
-    mustache = request.form.get("mustache", False)
-    mustache = "-1" if mustache == "false" else "1"
+    mustache = request.form.get("mustache")
+    status, out = valid_param_value(mustache, valid_celeb_param)
+    if not status:
+        resp = jsonify(out)
+        resp.status_code = out["status"]
+        return resp
+    mustache = out
 
     # No_Beard
-    no_beard = request.form.get("no_beard", False)
-    no_beard = "-1" if no_beard == "false" else "1"
+    no_beard = request.form.get("no_beard")
+    status, out = valid_param_value(no_beard, valid_celeb_param)
+    if not status:
+        resp = jsonify(out)
+        resp.status_code = out["status"]
+        return resp
+    no_beard = out
 
     # Sideburns
-    sideburns = request.form.get("sideburns", False)
-    sideburns = "-1" if sideburns == "false" else "1"
+    sideburns = request.form.get("sideburns")
+    status, out = valid_param_value(sideburns, valid_celeb_param)
+    if not status:
+        resp = jsonify(out)
+        resp.status_code = out["status"]
+        return resp
+    sideburns = out
 
     # Smiling
-    smiling = request.form.get("smiling", False)
-    smiling = "-1" if smiling == "false" else "1"
+    smiling = request.form.get("smiling")
+    status, out = valid_param_value(smiling, valid_celeb_param)
+    if not status:
+        resp = jsonify(out)
+        resp.status_code = out["status"]
+        return resp
+    smiling = out
 
     # Straight_Hair
-    straight_hair = request.form.get("straight_hair", False)
-    straight_hair = "-1" if straight_hair == "false" else "1"
+    straight_hair = request.form.get("straight_hair")
+    status, out = valid_param_value(straight_hair, valid_celeb_param)
+    if not status:
+        resp = jsonify(out)
+        resp.status_code = out["status"]
+        return resp
+    straight_hair = out
 
     # Wavy_Hair
-    wavy_hair = request.form.get("wavy_hair", False)
-    wavy_hair = "-1" if wavy_hair == "false" else "1"
+    wavy_hair = request.form.get("wavy_hair")
+    status, out = valid_param_value(wavy_hair, valid_celeb_param)
+    if not status:
+        resp = jsonify(out)
+        resp.status_code = out["status"]
+        return resp
+    wavy_hair = out
 
     # Wearing_Earrings
-    wearing_earrings = request.form.get("wearing_earrings", False)
-    wearing_earrings = "-1" if wearing_earrings == "false" else "1"
+    wearing_earrings = request.form.get("wearing_earrings")
+    status, out = valid_param_value(wearing_earrings, valid_celeb_param)
+    if not status:
+        resp = jsonify(out)
+        resp.status_code = out["status"]
+        return resp
+    wearing_earrings = out
 
     # Wearing_Hat
-    wearing_hat = request.form.get("wearing_hat", False)
-    wearing_hat = "-1" if wearing_hat == "false" else "1"
+    wearing_hat = request.form.get("wearing_hat")
+    status, out = valid_param_value(wearing_hat, valid_celeb_param)
+    if not status:
+        resp = jsonify(out)
+        resp.status_code = out["status"]
+        return resp
+    wearing_hat = out
 
     # Wearing_Lipstick
-    wearing_lipstick = request.form.get("wearing_lipstick", False)
-    wearing_lipstick = "-1" if wearing_lipstick == "false" else "1"
+    wearing_lipstick = request.form.get("wearing_lipstick")
+    status, out = valid_param_value(wearing_lipstick, valid_celeb_param)
+    if not status:
+        resp = jsonify(out)
+        resp.status_code = out["status"]
+        return resp
+    wearing_lipstick = out
 
     # Wearing_Necklace
-    wearing_necklace = request.form.get("wearing_necklace", False)
-    wearing_necklace = "-1" if wearing_necklace == "false" else "1"
+    wearing_necklace = request.form.get("wearing_necklace")
+    status, out = valid_param_value(wearing_necklace, valid_celeb_param)
+    if not status:
+        resp = jsonify(out)
+        resp.status_code = out["status"]
+        return resp
+    wearing_necklace = out
 
     # Wearing_Necktie
-    wearing_necktie = request.form.get("wearing_necktie", False)
-    wearing_necktie = "-1" if wearing_necktie == "false" else "1"
+    wearing_necktie = request.form.get("wearing_necktie")
+    status, out = valid_param_value(wearing_necktie, valid_celeb_param)
+    if not status:
+        resp = jsonify(out)
+        resp.status_code = out["status"]
+        return resp
+    wearing_necktie = out
 
-    # Conditional Information for Base Diffusion.
-    seed = request.form.get("seed", None)
-    if not seed:
-        seed = None
+    # Seed Params.
+    seed = request.form.get("seed")
+    valid_seed, error = is_valid_seed(seed)
+    if not valid_seed:
+        resp = jsonify(error)
+        resp.status_code = error["status"]
+        return resp
 
+    # Diffusion Sample Algorithms Params.
     sample_alg = request.form.get("sample_alg", "ddpm")
-
-    base_skip_step = request.form.get("base_skip_step", 100)
-    if not base_skip_step:
-        base_skip_step = None
-
+    valid_sample_alg, error = is_valid_sample_alg(
+        sample_alg,
+        current_app.config["ALLOWED_SAMPLING_ALG"]) 
+    if not valid_sample_alg:
+        resp = jsonify(error)
+        resp.status_code = error["status"]
+        return resp
+    
+    # Base Model Skip Steps Params.
+    default_skip_step = current_app.config["DEFAULT_SKIP_STEP"]
+    base_skip_step = request.form.get(
+        "base_skip_step",
+        default_skip_step)
+    valid_base_skip_step, error = is_valid_skip_step(base_skip_step)
+    if not valid_base_skip_step:
+        resp = jsonify(error)
+        resp.status_code = error["status"]
+        return resp
+    
     try:
         br_commands = [
             "--model_path",
@@ -365,38 +580,39 @@ def generate_celeb_faces():
         br_commands.append(current_app.config["DEVICE"])
         if seed:
             br_commands.append("-s")
-            br_commands.append(seed)
+            br_commands.append(str(seed))
         if sample_alg:
             br_commands.append("--diff_alg")
             br_commands.append(sample_alg)
 
         if sample_alg == "ddim":
             br_commands.append("--ddim_step_size")
-            br_commands.append(base_skip_step)
+            br_commands.append(str(base_skip_step))
 
         br_commands.append("--label")
-        br_commands.append(bald)
-        br_commands.append(black_hair)
-        br_commands.append(blond_hair)
-        br_commands.append(brown_hair)
-        br_commands.append(bushy_eyebrows)
-        br_commands.append(eyeglasses)
-        br_commands.append(goatee)
-        br_commands.append(gray_hair)
-        br_commands.append(male)
-        br_commands.append(mouth_open)
-        br_commands.append(mustache)
-        br_commands.append(no_beard)
-        br_commands.append(sideburns)
-        br_commands.append(smiling)
-        br_commands.append(straight_hair)
-        br_commands.append(wavy_hair)
-        br_commands.append(wearing_earrings)
-        br_commands.append(wearing_hat)
-        br_commands.append(wearing_lipstick)
-        br_commands.append(wearing_necklace)
-        br_commands.append(wearing_necktie)
+        br_commands.append(str(bald))
+        br_commands.append(str(black_hair))
+        br_commands.append(str(blond_hair))
+        br_commands.append(str(brown_hair))
+        br_commands.append(str(bushy_eyebrows))
+        br_commands.append(str(eyeglasses))
+        br_commands.append(str(goatee))
+        br_commands.append(str(gray_hair))
+        br_commands.append(str(male))
+        br_commands.append(str(mouth_open))
+        br_commands.append(str(mustache))
+        br_commands.append(str(no_beard))
+        br_commands.append(str(sideburns))
+        br_commands.append(str(smiling))
+        br_commands.append(str(straight_hair))
+        br_commands.append(str(wavy_hair))
+        br_commands.append(str(wearing_earrings))
+        br_commands.append(str(wearing_hat))
+        br_commands.append(str(wearing_lipstick))
+        br_commands.append(str(wearing_necklace))
+        br_commands.append(str(wearing_necktie))
 
+        # No Super-Resolution.
         sr_commands = None
 
         model_resource_ = current_app.config["model_resource"]
@@ -441,59 +657,99 @@ def generate_celeb_faces():
 
 @bp.route("/api/anime_portraits", methods=["POST"])
 def generate_anime_portraits():
-    # Centroids Index.
-    centroids_index = request.form.get("centroids_index", 0)
-    centroids_index = int(centroids_index)
+    valid_params = {}
+    for centroid in range(75):
+        valid_params[str(centroid)] = centroid
+    
+    centroids_index = request.form.get("centroids_index", "0")
+    status, out = valid_param_value(centroids_index, valid_params)
+    if not status :
+        resp = jsonify(out)
+        resp.status_code = out["status"]
+        return resp
 
+    centroids_index = out
     centroids_labels = [0] * 75
     centroids_labels[centroids_index] = 1
     centroids_labels = [str(x) for x in centroids_labels]
 
-    # Conditional Information for Base Diffusion.
-    seed = request.form.get("seed", None)
-    if not seed:
-        seed = None
+    # Seed Params.
+    seed = request.form.get("seed")
+    valid_seed, error = is_valid_seed(seed)
+    if not valid_seed:
+        resp = jsonify(error)
+        resp.status_code = error["status"]
+        return resp
 
+    # Diffusion Sample Algorithms Params.
     sample_alg = request.form.get("sample_alg", "ddpm")
-
-    base_skip_step = request.form.get("base_skip_step", 100)
-    if not base_skip_step:
-        base_skip_step = None
+    valid_sample_alg, error = is_valid_sample_alg(
+        sample_alg,
+        current_app.config["ALLOWED_SAMPLING_ALG"]) 
+    if not valid_sample_alg:
+        resp = jsonify(error)
+        resp.status_code = error["status"]
+        return resp
     
-    upsample = request.form.get("upsample", False)
-    if upsample == "false":
-        upsample = False
-    else:
-        upsample = True
+    # Base Model Skip Steps Params.
+    default_skip_step = current_app.config["DEFAULT_SKIP_STEP"]
+    base_skip_step = request.form.get(
+        "base_skip_step",
+        default_skip_step)
+    valid_base_skip_step, error = is_valid_skip_step(base_skip_step)
+    if not valid_base_skip_step:
+        resp = jsonify(error)
+        resp.status_code = error["status"]
+        return resp
 
-    sr_skip_step = request.form.get("sr_skip_step", 100)
-    if not sr_skip_step:
-        sr_skip_step = None
+    # Upsample Params.
+    valid_upsample_params = {
+        "false": False,
+        "true": True,
+        None: False
+    }
+    upsample = request.form.get("upsample")
+    valid_upsample, out = valid_param_value(upsample, valid_upsample_params)
+    if not valid_upsample:
+        resp = jsonify(out)
+        resp.status_code = error["status"]
+        return resp
+    upsample = out
+    
+    # Super Resolution Model Skip Steps Params.
+    sr_skip_step = request.form.get(
+        "sr_skip_step",
+        default_skip_step)
+    valid_sr_skip_step, error = is_valid_skip_step(sr_skip_step)
+    if not valid_sr_skip_step:
+        resp = jsonify(error)
+        resp.status_code = error["status"]
+        return resp
 
     try:
+        # Base Resolution Parameters.
         br_commands = [
             "--model_path",
             current_app.config["ANIMEPORTRAITS_BASE_PATH"]]
-
+    
         br_commands.append("--device")
         br_commands.append(current_app.config["DEVICE"])
         if seed:
             br_commands.append("-s")
-            br_commands.append(seed)
-        if sample_alg:
-            br_commands.append("--diff_alg")
-            br_commands.append(sample_alg)
+            br_commands.append(str(seed))
 
+        br_commands.append("--diff_alg")
+        br_commands.append(sample_alg)
+        
         if sample_alg == "ddim":
             br_commands.append("--ddim_step_size")
-            br_commands.append(base_skip_step)
-
+            br_commands.append(str(base_skip_step))
+        
         br_commands.append("--label")
         br_commands.extend(centroids_labels)
-
-        # img = generate_base_diffusion(commands=commands)
-
+        
         if upsample:
+            # Super Resolution Parameters.
             sr_commands = [
                 "--model_path",
                 current_app.config["ANIMEPORTRAITS_SR_PATH"]]
@@ -502,17 +758,14 @@ def generate_anime_portraits():
             sr_commands.append(current_app.config["DEVICE"])
 
             sr_commands.append("--cold_step_size")
-            sr_commands.append(sr_skip_step)
+            sr_commands.append(str(sr_skip_step))
 
             sr_commands.append("--label")
             sr_commands.extend(centroids_labels)
-
-            #img = generate_sr_diffusion(
-            #    lr_image=img,
-            #    commands=upsample_commands)
         else:
             sr_commands = None
 
+        # Get Hardware Resource if available to generate image.
         model_resource_ = current_app.config["model_resource"]
         img, ret_status = model_resource_.generate_diffusion(
             cond_img=None,
@@ -522,7 +775,7 @@ def generate_anime_portraits():
             log=print)
         
         if ret_status == False:
-            # Error No image passed.
+            # Error No image returned.
             data_dict = {
                 "image": None,
                 "message": "Server busy, please try again after a few minutes.",
@@ -531,7 +784,7 @@ def generate_anime_portraits():
 
             resp = jsonify(data_dict)
             resp.status_code = 503
-            return resp 
+            return resp
     except Exception as e:
         print(f"An error occured generating image: {e}")
         data_dict = {
@@ -541,7 +794,7 @@ def generate_anime_portraits():
 
         resp = jsonify(data_dict)
         resp.status_code = 500
-        return resp
+        return resp 
 
     # Convert numpy image to base64.
     b64_img = convert_numpy_to_base64(img)
