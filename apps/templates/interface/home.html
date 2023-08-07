@@ -402,8 +402,8 @@
                             <legend>Anime Portraits Controllers</legend>
                             {% for i in range(75) %}
                             <div class="controller-option">
-                                <label>
-                                    <input type="radio" name="portraits-centroid" value="{{i}}" required>
+                                <input type="radio" name="portraits-centroid" id="anime-portraits-{{i}}" value="{{i}}" {% if i == 0 %} required {% endif %}>
+                                <label for="anime-portraits-{{i}}">
                                     <img 
                                         id="anime-portraits-centroid-{{i}}" 
                                         src="{{ url_for('static', filename='media/anime_portraits_centroids/'+ i|string + '.jpg') }}",
