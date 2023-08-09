@@ -1,7 +1,15 @@
 import os
+from dotenv import load_dotenv
+
 import torch
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
+# Loads .env variables if any.
+env_file = ".env"
+env = os.path.join(os.getcwd(), env_file)
+if os.path.exists(env):
+    load_dotenv(env)
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'default secret')
