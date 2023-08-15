@@ -1,16 +1,17 @@
-
 import os
 import sys
 
-# TODO: Decouple module from Web-App and make api endpoint to be able to run as a service.
-# Change to match name of folder if needed.
-module_name = "simple_diffusion"
+from dotenv import load_dotenv
 
-dir_path = os.path.dirname(os.path.abspath(__file__))
-diff_lib_path = os.path.join(
-    dir_path,
-    "diffusion_lib",
-    module_name)
+# Loads .env variables if any.
+env_file = ".env"
+env = os.path.join(os.getcwd(), env_file)
+if os.path.exists(env):
+    load_dotenv(env)
 
-if os.path.isdir(diff_lib_path):
-    sys.path.append(diff_lib_path)
+"""
+TODO: Decouple module from Web-Interface module and make API endpoints to be
+able to run as a separate service.
+"""
+DIFFUSION_LIB_PATH = os.environ.get("DIFFUSION_LIB_PATH")
+sys.path.append(DIFFUSION_LIB_PATH)
