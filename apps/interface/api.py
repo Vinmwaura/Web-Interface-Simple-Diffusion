@@ -83,7 +83,7 @@ def generate_body_poses():
     try:
         # Base Resolution Parameters.
         br_commands = [
-            "--model_path",
+            "--config",
             current_app.config["BODY_POSE_BASE_PATH"]]
     
         br_commands.append("--device")
@@ -102,7 +102,7 @@ def generate_body_poses():
         if upsample:
             # Super Resolution Parameters.
             sr_commands = [
-                "--model_path",
+                "--config",
                 current_app.config["BODY_POSE_SR_PATH"]]
 
             sr_commands.append("--device")
@@ -262,7 +262,7 @@ def generate_myface():
 
     try:
         br_commands = [
-            "--model_path",
+            "--config",
             current_app.config["MYFACE_BASE_PATH"]]
 
         br_commands.append("--device")
@@ -286,7 +286,7 @@ def generate_myface():
 
         if upsample:
             sr_commands = [
-                "--model_path",
+                "--config",
                 current_app.config["MYFACE_SR_PATH"]]
 
             sr_commands.append("--device")
@@ -573,7 +573,7 @@ def generate_celeb_faces():
     
     try:
         br_commands = [
-            "--model_path",
+            "--config",
             current_app.config["CELEBFACE_BASE_PATH"]]
 
         br_commands.append("--device")
@@ -729,7 +729,7 @@ def generate_anime_portraits():
     try:
         # Base Resolution Parameters.
         br_commands = [
-            "--model_path",
+            "--config",
             current_app.config["ANIMEPORTRAITS_BASE_PATH"]]
     
         br_commands.append("--device")
@@ -751,7 +751,7 @@ def generate_anime_portraits():
         if upsample:
             # Super Resolution Parameters.
             sr_commands = [
-                "--model_path",
+                "--config",
                 current_app.config["ANIMEPORTRAITS_SR_PATH"]]
 
             sr_commands.append("--device")
