@@ -20,41 +20,10 @@ class Config:
     CELEBFACE_IMG_DIM = os.environ.get('CELEBFACE_IMG_DIM', 128)
     ANIMEPORTRAITS_IMG_DIM = os.environ.get('ANIMEPORTRAITS_IMG_DIM', 128)
 
-    BODY_POSE_BASE_PATH = os.environ.get(
-        "BODY_POSE_BASE_PATH",
-        os.path.join(
-            BASE_DIR,
-            "diffusion_apps/models/bodypose_base.json"))
-    BODY_POSE_SR_PATH = os.environ.get(
-        "BODY_POSE_SR_PATH",
-        os.path.join(
-            BASE_DIR,
-            "diffusion_apps/models/bodypose_sr.json"))
-    
-    MYFACE_BASE_PATH = os.environ.get(
-        "MYFACE_BASE_PATH",
-        os.path.join(
-            BASE_DIR,
-            "diffusion_apps/models/myface_base.json"))
-    MYFACE_SR_PATH = os.environ.get(
-        "MYFACE_SR_PATH",
-        os.path.join(
-            BASE_DIR,
-            "diffusion_apps/models/myface_sr.json"))
-    
-    CELEBFACE_BASE_PATH = os.environ.get(
-        "CELEBFACE_BASE_PATH",
-        os.path.join(
-            BASE_DIR,
-            "diffusion_apps/models/celebface_base.json"))
-    
-    ANIMEPORTRAITS_BASE_PATH = os.environ.get(
-        "ANIMEPORTRAIT_BASE_PATH",
-        os.path.join(
-            BASE_DIR,
-            "diffusion_apps/models/animeportraits_base.json"))
-    ANIMEPORTRAITS_SR_PATH = os.environ.get(
-        "ANIMEPORTRAIT_SR_PATH",
-        os.path.join(
-            BASE_DIR,
-            "diffusion_apps/models/animeportraits_sr.json"))
+    BODY_POSE_BASE_PATH = os.environ.get("BODY_POSE_BASE_PATH")
+    BODY_POSE_SR_PATH = os.environ.get("BODY_POSE_SR_PATH")
+    MYFACE_BASE_PATH = os.environ.get("MYFACE_BASE_PATH")
+    MYFACE_SR_PATH = os.environ.get("MYFACE_SR_PATH")
+    CELEBFACE_BASE_PATH = os.environ.get("CELEBFACE_BASE_PATH")
+    ANIMEPORTRAITS_BASE_PATH = os.environ.get("ANIMEPORTRAIT_BASE_PATH")
+    ANIMEPORTRAITS_SR_PATH = os.environ.get("ANIMEPORTRAIT_SR_PATH")

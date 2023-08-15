@@ -2,5 +2,3 @@
 *.env
 
 diffusion_apps/diffusion_lib/*
-diffusion_apps/models/*
-
