@@ -57,13 +57,13 @@ chmod +x run_interface.sh
 
 ## Interfaces
 ### My_Body_Pose Tab
-https://github.com/Vinmwaura/Web-Interface-Simple-Diffusion/assets/12788331/3803e445-f453-495b-8e47-9c7c51287cfc
+![Body_Pose](./assets/BodyPoses.mp4)
 
 ### My_Face Tab
-https://github.com/Vinmwaura/Web-Interface-Simple-Diffusion/assets/12788331/576dbe0c-5ca9-4ec7-a05c-3764843d80bd
+![Face](./assets/Face.mp4)
 
 ### Celebrity_Face Tab
-https://github.com/Vinmwaura/Web-Interface-Simple-Diffusion/assets/12788331/c58d7332-820b-4b99-afe4-c58773184728
+![Celebrity_Faces](./assets/Celeb_Face.mp4)
 
 ### Anime_Portraits Tab
-https://github.com/Vinmwaura/Web-Interface-Simple-Diffusion/assets/12788331/8a1ae69d-d325-411d-b0f9-6d051369abfd
+![Anime_Portraits](./assets/Anime_Portraits.mp4)
